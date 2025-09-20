@@ -8,6 +8,7 @@ The easiest way is to use the development routes that bypass authentication:
 
 ### Available Development Routes:
 
+- **Development Home**: `http://localhost:5173/dev` (Main development page with navigation)
 - **Dashboard**: `http://localhost:5173/dev/dashboard`
 - **Book Service**: `http://localhost:5173/dev/book-service`
 
@@ -101,3 +102,14 @@ If you encounter issues:
 - **Production mode** (`npm run dev`): Full authentication, requires backend API
 - **Development mode** (`npm run dev:mock`): Mock authentication, no backend required
 - **Dev routes** (`/dev/*`): Bypass authentication for specific pages
+
+5.
+
+bypassed routes for the dev purpose
+$ start http://localhost:5173/dev/test
+
+bypass routes for booking service
+$ start http://localhost:5173/dev/book-service
+
+bypass routes for the dashboard
+$ start http://localhost:5173/dev/dashboard
