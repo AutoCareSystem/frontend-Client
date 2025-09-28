@@ -58,19 +58,49 @@ class ApiService {
   }
 
   // Authentication endpoints
-  async login(
-    credentials: LoginForm
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.api.post("/auth/login", credentials);
-    return response.data;
+ async login(credentials: LoginForm): Promise<ApiResponse<{ user: User; token: string }>> {
+  const response = await this.api.post("/auth/login", credentials);
+  if (response.data && response.data.accessToken) {
+    const user = {
+      id: response.data.id || "",
+      email: credentials.email,
+      firstName: response.data.firstName || "",
+      lastName: response.data.lastName || "",
+      phone: response.data.phoneNumber || "", 
+      role: response.data.role || "User",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return { success: true, data: { user, token: response.data.accessToken } };
   }
+  throw new Error(response.data.message || "Login failed");
+}
 
-  async signup(
-    userData: SignupForm
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
-    const response = await this.api.post("/auth/signup", userData);
-    return response.data;
+  async signup(userData: SignupForm): Promise<ApiResponse<{ user: User; token: string }>> {
+  const response = await this.api.post("/auth/register", {
+    email: userData.email,
+    password: userData.password,
+    role: "User",
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    phoneNumber: userData.phone 
+  });
+  if (response.data && response.data.accessToken) {
+    const user = {
+      id: response.data.id || "",
+      email: userData.email,
+      firstName: response.data.firstName,
+      lastName: response.data.lastName,
+      phone: response.data.phoneNumber,
+      role: response.data.role,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    return { success: true, data: { user, token: response.data.accessToken } };
+  } else {
+    throw new Error(response.data.message || "Signup failed");
   }
+}
 
   async logout(): Promise<void> {
     await this.api.post("/auth/logout");
