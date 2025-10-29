@@ -1,38 +1,39 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import CustomerDashboard from "./pages/customer/Dashboard";
+import BookAppointment from "./pages/customer/BookAppointment";
+import Modifications from "./pages/customer/Modifications";
+import Chatbot from "./pages/customer/Chatbot";
 
-// define what the API response looks like
-interface ApiResponse {
-  message: string;
-}
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+import TimeLogs from "./pages/employee/TimeLogs";
+import Projects from "./pages/employee/Projects";
+import Appointments from "./pages/employee/Appointments";
+import Profile from "./pages/employee/Profile";
+
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 
 export default function App() {
-  // explicitly type the state as a string
-  const [message, setMessage] = useState<string>("");
-
-  useEffect(() => {
-    const fetchMessage = async () => {
-      try {
-        const res = await fetch("http://localhost:5093/test");
-        const data: ApiResponse = await res.json();
-        setMessage(data.message);
-      } catch (err) {
-        console.error("Error fetching API:", err);
-      }
-    };
-
-    fetchMessage();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold mb-6 text-blue-700">
-        React + ASP.NET Test
-      </h1>
+    <Router>
+      <Routes>
+        {/* Auth */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
-      <div className="bg-blue-500 text-white px-6 py-4 rounded-lg shadow-md">
-        API says: {message || "Loading..."}
-      </div>
-    </div>
+        {/* Customer Routes */}
+        <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+        <Route path="/customer/appointments" element={<BookAppointment />} />
+        <Route path="/customer/modifications" element={<Modifications />} />
+        <Route path="/customer/chatbot" element={<Chatbot />} />
+
+        {/* Employee Routes */}
+        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        <Route path="/employee/timelogs" element={<TimeLogs />} />
+        <Route path="/employee/projects" element={<Projects />} />
+        <Route path="/employee/appointments" element={<Appointments />} />
+        <Route path="/employee/profile" element={<Profile />} />
+      </Routes>
+    </Router>
   );
 }
