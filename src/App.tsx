@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import CustomerDashboard from "./pages/customer/Dashboard";
-import BookAppointment from "./pages/customer/BookAppointment";
-import Modifications from "./pages/customer/Modifications";
+// import BookAppointment from "./pages/customer/BookAppointment";
+// import Modifications from "./pages/customer/Modifications";
+import ServicePage from "./pages/customer/ServicePage";
+import ProjectPage from "./pages/customer/Projectpage";
 import Chatbot from "./pages/customer/Chatbot";
 
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
@@ -23,8 +25,12 @@ export default function App() {
 
         {/* Customer Routes */}
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-        <Route path="/customer/appointments" element={<BookAppointment />} />
-        <Route path="/customer/modifications" element={<Modifications />} />
+        {/* <Route path="/customer/appointments" element={<BookAppointment />} />
+        <Route path="/customer/modifications" element={<Modifications />} /> */}
+        <Route path="/customer/appointments" element={<ServicePage />} />
+        <Route path="/Servicepage" element={<ServicePage />} />
+        <Route path="/customer/modifications" element={<ProjectPage />} />
+        <Route path="/Projectpage" element={<ProjectPage />} />
         <Route path="/customer/chatbot" element={<Chatbot />} />
 
         {/* Employee Routes */}
