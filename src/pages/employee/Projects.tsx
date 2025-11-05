@@ -1,5 +1,7 @@
 import Sidebar from "../../components/Sidebar";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { fetchProjects } from "../../api/projects";
+import type { AppointmentDto } from "../../types/appointments";
 
 type ProjectItem = {
   id: number;
@@ -44,6 +46,50 @@ const DUMMY_PROJECTS: ProjectItem[] = [
 export default function Projects() {
   const [projects, setProjects] = useState<ProjectItem[]>(DUMMY_PROJECTS);
   const [selected, setSelected] = useState<ProjectItem | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchProjects();
+        if (!mounted) return;
+        // Map backend DTOs to local ProjectItem shape when possible
+        const mapped: ProjectItem[] = data.map((dRaw, idx) => {
+          const d = dRaw as AppointmentDto & any;
+          // customer name can be nested: d.customer.user.name or top-level customerName
+          const customerName = (d.customer && d.customer.user && d.customer.user.name) || d.customerName || "Unknown";
+          // project title can be in projectDetails or top-level projectTitle
+          const projectTitle = (d.projectDetails && d.projectDetails.projectTitle) || d.projectTitle || `Project ${idx + 1}`;
+          const description = (d.projectDetails && d.projectDetails.projectDescription) || d.projectDescription || undefined;
+          const start = d.startDate || d.start || new Date().toISOString();
+          const end = d.endDate || d.end || new Date().toISOString();
+          const status = (d.status as any) || "Pending";
+
+          return {
+            id: (d.appointmentID ?? d.id ?? 1000 + idx) as number,
+            name: projectTitle,
+            customerName,
+            start,
+            end,
+            description,
+            status,
+          } as ProjectItem;
+        });
+
+        if (mapped.length) setProjects(mapped);
+      } catch (err: any) {
+        setLoadError(err?.message ?? "Failed to load projects");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   // Simple availability check: ensure no approved project overlaps the timeslot
   const canApprove = (proj: ProjectItem) => {
@@ -71,9 +117,12 @@ export default function Projects() {
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
       <Sidebar role="employee" />
-
+      
       <main className="flex-1 p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold text-red-500 mb-6">Projects</h1>
+
+        {loading && <div className="mb-4 text-sm text-gray-300">Loading projects...</div>}
+        {loadError && <div className="mb-4 text-sm text-red-500">{loadError}. Showing local data.</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {list.map((p) => (

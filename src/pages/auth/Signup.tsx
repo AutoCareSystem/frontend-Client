@@ -8,11 +8,14 @@ export default function Signup() {
   const [role, setRole] = useState<"customer" | "employee">("customer");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async () => {
+    setSubmitting(true);
     try {
-      await axios.post("http://localhost:5093/api/auth/register", {
+      const base = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5093";
+      await axios.post(`${base}/api/auth/register`, {
         email,
         password,
         role,
@@ -23,8 +26,34 @@ export default function Signup() {
 
       setTimeout(() => navigate("/login"), 1500);
     } catch (err: any) {
-      setError("Registration failed. Try again.");
+      // Try to surface useful server error information
+      let msg = "Registration failed. Try again.";
+      if (err?.response) {
+        const data = err.response.data;
+        if (data) {
+          if (typeof data === "string") msg = data;
+          else if (data.errors) {
+            // ASP.NET Identity returns errors object
+            try {
+              const values = Object.values(data.errors).flat();
+              msg = values.join("; ");
+            } catch {
+              msg = JSON.stringify(data.errors);
+            }
+          } else if (data.title || data.detail) {
+            msg = `${data.title || "Error"}${data.detail ? ": " + data.detail : ""}`;
+          } else {
+            msg = JSON.stringify(data).slice(0, 1000);
+          }
+        } else {
+          msg = err.response.statusText || msg;
+        }
+      } else if (err?.message) msg = err.message;
+
+      setError(msg);
       setSuccess("");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -61,9 +90,10 @@ export default function Signup() {
 
         <button
           onClick={handleSignup}
-          className="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg font-medium text-white"
+          disabled={submitting}
+          className={`w-full py-2 rounded-lg font-medium text-white ${submitting ? 'bg-gray-600' : 'bg-red-600 hover:bg-red-700'}`}
         >
-          Sign Up
+          {submitting ? 'Signing up...' : 'Sign Up'}
         </button>
       </div>
     </div>

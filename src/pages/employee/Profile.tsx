@@ -1,5 +1,6 @@
 import Sidebar from "../../components/Sidebar";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { getEmployeeProfile, updateEmployeeProfile } from "../../api/profile";
 
 type ProfileModel = {
   name: string;
@@ -11,17 +12,20 @@ type ProfileModel = {
 
 export default function Profile() {
   const defaultProfile: ProfileModel = {
-    name: "Jane Doe",
-    email: "jane@company.com",
-    phone: "+1 (555) 123-4567",
+    name: "",
+    email: "",
+    phone: "",
     role: "Employee",
-    createdAt: "2024-10-01T10:00:00Z",
+    createdAt: new Date().toISOString(),
   };
 
   const [profile, setProfile] = useState<ProfileModel>(defaultProfile);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Password change state (local only)
   const [currentPassword, setCurrentPassword] = useState("");
@@ -40,14 +44,90 @@ export default function Profile() {
     setAvatarPreview(url);
   };
 
+  function getUserIdFromToken(): string | null {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return null;
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      // common claim names - coerce to string when present
+      const id = payload.userId ?? payload.userID ?? payload.sub ?? payload.nameid ?? null;
+      return id == null ? null : String(id);
+    } catch {
+      return null;
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true;
+    const uidFromStorage = localStorage.getItem('userId');
+    const uid = uidFromStorage ? uidFromStorage : getUserIdFromToken();
+    if (!uid) {
+      setLoadError('No userId available. Please sign in.');
+      return;
+    }
+    setUserId(uid);
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await getEmployeeProfile(uid);
+        if (!mounted) return;
+        setProfile(p => ({
+          ...p,
+          name: data.name ?? p.name,
+          email: data.email ?? p.email,
+          phone: data.phone ?? p.phone,
+          role: data.position ?? p.role,
+          createdAt: p.createdAt,
+        }));
+      } catch (err: any) {
+        if (!mounted) return;
+        // Surface detailed server error when available to help debug auth/redirects
+        if (err?.response) {
+          const status = err.response.status;
+          const body = err.response.data;
+          setLoadError(`Request failed: ${status} - ${typeof body === 'string' ? body : JSON.stringify(body).slice(0,1000)}`);
+        } else {
+          setLoadError(err?.message || 'Failed to load profile');
+        }
+        // expose token presence in console for quick debugging
+        console.debug('accessToken present:', !!localStorage.getItem('accessToken'));
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, []);
+
   const onSave = async () => {
+    if (!userId) {
+      setMessage("Cannot save: unknown user. Please login.");
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
     setSaving(true);
-    // TODO: wire to backend API to save profile
-    await new Promise((r) => setTimeout(r, 500));
-    setSaving(false);
-    setEditing(false);
-    setMessage("Profile saved");
-    setTimeout(() => setMessage(null), 3000);
+    try {
+      await updateEmployeeProfile(userId, { name: profile.name, phone: profile.phone, position: profile.role });
+      setMessage("Profile saved");
+      setEditing(false);
+    } catch (err: any) {
+      if (err?.response) {
+        const status = err.response.status;
+        const body = err.response.data;
+        setMessage(`Save failed: ${status} - ${typeof body === 'string' ? body : JSON.stringify(body).slice(0,1000)}`);
+      } else {
+        setMessage(err?.message || "Failed to save profile");
+      }
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
   };
 
   const onChangePassword = async () => {
@@ -91,6 +171,8 @@ export default function Profile() {
         {message && (
           <div className="mb-4 p-3 bg-green-700 rounded">{message}</div>
         )}
+        {loading && <div className="mb-4 text-sm text-gray-300">Loading profile...</div>}
+        {loadError && <div className="mb-4 text-sm text-red-500">{loadError}</div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="col-span-1 bg-[#2a2a2a] p-6 rounded-xl border border-gray-700">
@@ -152,4 +234,5 @@ export default function Profile() {
     </div>
   );
 }
+
 
