@@ -12,7 +12,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const customerMenu = [
     { name: "Dashboard", path: "/customer/dashboard", icon: <Home size={20} /> },
-    { name: "Appointments", path: "/customer/appointments", icon: <Calendar size={20} /> },
+    { name: "Services", path: "/customer/appointments", icon: <Calendar size={20} /> },
     { name: "Modifications", path: "/customer/modifications", icon: <Folder size={20} /> },
     { name: "Chatbot", path: "/customer/chatbot", icon: <MessageCircle size={20} /> },
   ];
@@ -48,7 +48,7 @@ export default function Sidebar({ role }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-gray-700">
-        <button className="flex items-center gap-3 p-3 w-full rounded-lg hover:bg-red-700 transition">
+        <button className="flex items-center w-full gap-3 p-3 transition rounded-lg hover:bg-red-700">
           <LogOut size={20} /> Logout
         </button>
       </div>

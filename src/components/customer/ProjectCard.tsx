@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
+import { generateProjectReport } from '../../utils/pdfGenerator';
 
 interface CustomService {
   id: number;
@@ -65,6 +66,13 @@ const ProjectCard: React.FC<Props> = ({ service, onEdit, onDelete, showStatus = 
       <div className="flex items-center justify-between pt-3 border-t border-gray-700">
         <span className={`text-xl font-bold text-${primaryColor}-400`}>{service.price}</span>
       </div>
+      
+      <button
+        onClick={() => generateProjectReport(service)}
+        className="w-full px-4 py-2 mt-3 text-sm font-medium text-gray-200 transition duration-200 bg-gray-700 rounded hover:bg-gray-600"
+      >
+        Generate PDF Report
+      </button>
     </div>
   );
 };

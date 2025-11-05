@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import ProjectCard from '../../components/customer/ProjectCard';
 import ProjectForm from '../../components/customer/ProjectForm';
+import Sidebar from '../../components/Sidebar';
 
 interface CustomService {
   id: number;
@@ -123,7 +124,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
     const newService: CustomService = {
       id: Date.now(),
       name: formData.name,
-      price: formData.price.startsWith('$') ? formData.price : `$${formData.price}`,
+      price: formData.price.startsWith('Rs') ? formData.price : `Rs ${formData.price}`,
       description: formData.description,
       endDate: formData.endDate,
       status: 'pending',
@@ -168,7 +169,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
     setIsAdding(true);
     setFormData({
       name: service.name,
-      price: service.price.replace('$', ''),
+      price: service.price.replace(/[^0-9.]/g, ''),
       description: service.description,
       endDate: service.endDate
     });
@@ -185,20 +186,17 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
     });
   };
 
-  const exportServices = (): void => {
-    const dataStr = JSON.stringify(customServices, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'custom-services.json';
-    link.click();
-  };
 
 
   return (
     <div className={`min-h-screen py-8 ${dark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
       <div className="px-4 mx-auto max-w-7xl">
+        <div className="flex gap-6">
+          <Sidebar role="customer" />
+          <div className="flex-1">
+          {/* Navigation Bar (increased height) */}
+          {/* Header */}
+
         {/* Header */}
         <div className={`${dark ? pageConfig.headerBg : 'bg-white'} p-6 mb-8 rounded-lg shadow-md`}>
           <div className="flex items-center justify-between">
@@ -212,14 +210,6 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
               </div>
             </div>
             <div className="flex space-x-3">
-              {!isAdding && customServices.length > 0 && (
-                <button
-                  onClick={exportServices}
-                  className={`${dark ? 'px-4 py-2 font-semibold text-gray-200 transition duration-200 bg-gray-700 rounded-lg hover:bg-gray-600' : 'px-4 py-2 font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200'}`}
-                >
-                  Export
-                </button>
-              )}
               {!isAdding && (
                 <button
                   onClick={() => setIsAdding(true)}
@@ -280,6 +270,8 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
               ))}
             </div>
           )}
+        </div>
+          </div>
         </div>
       </div>
     </div>

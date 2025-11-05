@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { CheckCircle, Lock } from 'lucide-react';
 
 interface Service {
   id: number;
@@ -9,44 +9,70 @@ interface Service {
   category?: string;
 }
 
-interface Props {
+interface ServiceCardProps {
   service: Service;
   selected: boolean;
   onToggle: (id: number) => void;
   showCategory?: boolean;
   primaryColor?: string;
   dark?: boolean;
+  disabled?: boolean;
 }
 
-const ServiceCard: React.FC<Props> = ({ service, selected, onToggle, showCategory = false, primaryColor = 'blue', dark = false }) => {
-  const cardBg = dark ? 'bg-[#2a2a2a]' : 'bg-white';
-  const titleColor = dark ? 'text-gray-200' : 'text-gray-800';
-  const descColor = dark ? 'text-gray-300' : 'text-gray-600';
-  const categoryBg = dark ? 'bg-[#3a3a3a]' : 'bg-gray-100';
+const ServiceCard: React.FC<ServiceCardProps> = ({
+  service,
+  selected,
+  onToggle,
+  showCategory = false,
+  primaryColor = 'red',
+  dark = false
+  ,disabled = false
+}) => {
+  const getBgColor = () => {
+    if (dark) {
+      return selected ? 'bg-red-900/20' : 'bg-[#2a2a2a]';
+    }
+    return selected ? `bg-${primaryColor}-50` : 'bg-white';
+  };
+
+  const getBorderColor = () => {
+    if (dark) {
+      return selected ? 'border-red-500' : 'border-gray-700';
+    }
+    return selected ? `border-${primaryColor}-500` : 'border-gray-200';
+  };
 
   return (
     <div
-      onClick={() => onToggle(service.id)}
-      className={`${cardBg} rounded-lg shadow-md p-6 cursor-pointer transition duration-200 ${
-        selected
-          ? `border-2 border-${primaryColor}-500 ${primaryColor === 'red' ? 'bg-red-50/10' : `bg-${primaryColor}-50`}`
-          : `border-2 border-transparent hover:border-${primaryColor}-300`
-      }`}
+      className={`p-4 border-2 rounded-lg transition-all duration-200 ${getBgColor()} ${getBorderColor()} ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'}`}
+      onClick={() => !disabled && onToggle(service.id)}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className={`text-lg font-bold ${titleColor}`}>{service.name}</h3>
-          {showCategory && service.category && (
-            <span className={`inline-block px-2 py-1 mt-1 text-xs ${dark ? 'text-gray-400' : 'text-gray-500'} ${categoryBg} rounded`}>
-              {service.category}
-            </span>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-gray-800'}`}>
+          {service.name}
+        </h3>
+        <div className="flex items-center space-x-2">
+          {selected && (
+            <CheckCircle className={`w-6 h-6 ${dark ? 'text-red-500' : `text-${primaryColor}-500`}`} />
+          )}
+          {disabled && (
+            <Lock className={`w-5 h-5 ${dark ? 'text-gray-400' : 'text-gray-500'}`} />
           )}
         </div>
-        {selected && <Check className={`w-6 h-6 text-${primaryColor}-600`} />}
       </div>
-      <p className={`mb-3 text-sm ${descColor}`}>{service.description}</p>
-      <div className="flex items-center justify-between">
-        <span className={`text-xl font-bold text-${primaryColor}-600`}>{service.price}</span>
+      
+      {showCategory && service.category && (
+        <div className={`text-sm mb-2 ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
+          Category: {service.category}
+        </div>
+      )}
+
+      <p className={`text-sm mb-3 ${dark ? 'text-gray-400' : 'text-gray-600'}`}>
+        {service.description}
+      </p>
+
+      <div className={`text-lg font-bold ${dark ? 'text-red-500' : `text-${primaryColor}-600`}`}>
+        {service.price}
       </div>
     </div>
   );

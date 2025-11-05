@@ -1,37 +1,40 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-type PageType = 'service' | 'project';
+const Navigation: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
 
-interface NavigationProps {
-  currentPage: PageType;
-  setCurrentPage: (page: PageType) => void;
-}
+  const isService = location.pathname.startsWith('/customer/appointments') || location.pathname === '/Servicepage';
+  const isProject = location.pathname.startsWith('/customer/modifications') || location.pathname === '/Projectpage';
 
-const Navigation: React.FC<NavigationProps> = ({ currentPage, setCurrentPage }) => {
   return (
-    <nav className="text-white bg-indigo-600 shadow-lg">
-      <div className="px-4 py-4 mx-auto max-w-7xl">
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setCurrentPage('service')}
-            className={`px-6 py-2 rounded-lg font-semibold transition duration-200 ${
-              currentPage === 'service'
-                ? 'bg-white text-indigo-600'
-                : 'bg-indigo-700 hover:bg-indigo-800'
+    <nav className="sticky top-0 z-50 text-gray-200 bg-[#2a2a2a] border-b border-gray-700">
+      <div className="px-4 mx-auto max-w-7xl">
+        <div className="flex items-center space-x-8">
+          {/* Service Page Tab */}
+          <div
+            onClick={() => navigate('/customer/appointments')}
+            className={`cursor-pointer px-6 py-4 -mb-px border-b-2 font-medium transition-all duration-200 ${
+              isService
+                ? 'border-red-500 text-red-500'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
             }`}
           >
             Service Page
-          </button>
-          <button
-            onClick={() => setCurrentPage('project')}
-            className={`px-6 py-2 rounded-lg font-semibold transition duration-200 ${
-              currentPage === 'project'
-                ? 'bg-white text-indigo-600'
-                : 'bg-indigo-700 hover:bg-indigo-800'
+          </div>
+
+          {/* Project Page Tab */}
+          <div
+            onClick={() => navigate('/customer/modifications')}
+            className={`cursor-pointer px-6 py-4 -mb-px border-b-2 font-medium transition-all duration-200 ${
+              isProject
+                ? 'border-red-500 text-red-500'
+                : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
             }`}
           >
             Project Page
-          </button>
+          </div>
         </div>
       </div>
     </nav>
