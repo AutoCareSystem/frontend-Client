@@ -12,7 +12,7 @@ export default function Signup() {
 
   const handleSignup = async () => {
     try {
-      const res = await axios.post("http://localhost:5093/api/auth/register", {
+      await axios.post("http://localhost:5093/api/auth/register", {
         email,
         password,
         role,
