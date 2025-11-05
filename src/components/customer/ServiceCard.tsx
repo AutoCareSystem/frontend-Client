@@ -5,7 +5,6 @@ interface Service {
   id: number;
   name: string;
   price: string;
-  duration: string;
   description: string;
   category?: string;
 }
@@ -48,7 +47,6 @@ const ServiceCard: React.FC<Props> = ({ service, selected, onToggle, showCategor
       <p className={`mb-3 text-sm ${descColor}`}>{service.description}</p>
       <div className="flex items-center justify-between">
         <span className={`text-xl font-bold text-${primaryColor}-600`}>{service.price}</span>
-        <span className={`${dark ? 'text-gray-400' : 'text-sm text-gray-500'}`}>{service.duration}</span>
       </div>
     </div>
   );

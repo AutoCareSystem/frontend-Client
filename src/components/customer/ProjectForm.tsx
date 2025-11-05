@@ -4,8 +4,8 @@ import { Check, X } from 'lucide-react';
 interface FormData {
   name: string;
   price: string;
-  duration: string;
   description: string;
+  endDate?: string;
 }
 
 interface Props {
@@ -38,12 +38,12 @@ const ProjectForm: React.FC<Props> = ({ formData, onChange, onSubmit, onCancel, 
           <input name="price" value={formData.price} onChange={onChange} placeholder="e.g., 499.99" className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
         </div>
         <div>
-          <label className={`${labelColor} block mb-2 font-medium`}>Duration (minutes) <span className="text-red-500">*</span></label>
-          <input name="duration" value={formData.duration} onChange={onChange} placeholder="e.g., 180" className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
-        </div>
-        <div>
           <label className={`${labelColor} block mb-2 font-medium`}>Description</label>
           <input name="description" value={formData.description} onChange={onChange} placeholder="Brief description" className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
+        </div>
+        <div>
+          <label className={`${labelColor} block mb-2 font-medium`}>Desired completion date</label>
+          <input name="endDate" type="date" value={formData.endDate || ''} onChange={onChange} className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
         </div>
       </div>
 

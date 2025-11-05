@@ -7,8 +7,8 @@ interface CustomService {
   id: number;
   name: string;
   price: string;
-  duration: string;
   description: string;
+  endDate?: string;
   status?: 'pending' | 'in-progress' | 'completed';
   createdAt?: string;
 }
@@ -16,8 +16,8 @@ interface CustomService {
 interface FormData {
   name: string;
   price: string;
-  duration: string;
   description: string;
+  endDate?: string;
 }
 
 // ✏️ CUSTOMIZE PAGE SETTINGS
@@ -69,8 +69,8 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
   const [formData, setFormData] = useState<FormData>({
     name: '',
     price: '',
-    duration: '',
-    description: ''
+    description: '',
+    endDate: ''
   });
 
   const pageConfig = { ...PAGE_CONFIG, ...config };
@@ -104,7 +104,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
   };
 
   const validateForm = (): boolean => {
-    if (!formData.name || !formData.price || !formData.duration) {
+    if (!formData.name || !formData.price) {
       alert('Please fill in all required fields');
       return false;
     }
@@ -124,8 +124,8 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
       id: Date.now(),
       name: formData.name,
       price: formData.price.startsWith('$') ? formData.price : `$${formData.price}`,
-      duration: formData.duration.includes('min') ? formData.duration : `${formData.duration} min`,
       description: formData.description,
+      endDate: formData.endDate,
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -140,7 +140,7 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
 
     const updatedServices = customServices.map(service => 
       service.id === editingId 
-        ? { ...service, ...formData }
+        ? { ...service, ...formData, endDate: formData.endDate }
         : service
     );
 
@@ -169,8 +169,8 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
     setFormData({
       name: service.name,
       price: service.price.replace('$', ''),
-      duration: service.duration.replace(' min', ''),
-      description: service.description
+      description: service.description,
+      endDate: service.endDate
     });
   };
 
@@ -180,8 +180,8 @@ const ProjectPage: React.FC<ProjectPageProps> = ({
     setFormData({
       name: '',
       price: '',
-      duration: '',
-      description: ''
+      description: '',
+      endDate: ''
     });
   };
 

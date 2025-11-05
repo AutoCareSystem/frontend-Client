@@ -11,90 +11,79 @@ interface Service {
   id: number;
   name: string;
   price: string;
-  duration: string;
   description: string;
   category?: string;
 }
 
 // ✏️ EDIT YOUR SERVICES HERE - Add, remove, or modify services
 const DEFAULT_SERVICES: Service[] = [
-  { 
-    id: 1, 
-    name: 'Oil Change', 
-    price: '$49.99', 
-    duration: '30 min', 
+  {
+    id: 1,
+    name: 'Oil Change',
+    price: '$49.99',
     description: 'Complete oil and filter change',
     category: 'Maintenance'
   },
-  { 
-    id: 2, 
-    name: 'Tire Rotation', 
-    price: '$29.99', 
-    duration: '20 min', 
+  {
+    id: 2,
+    name: 'Tire Rotation',
+    price: '$29.99',
     description: 'Rotate all four tires for even wear',
     category: 'Maintenance'
   },
-  { 
-    id: 3, 
-    name: 'Brake Inspection', 
-    price: '$39.99', 
-    duration: '45 min', 
+  {
+    id: 3,
+    name: 'Brake Inspection',
+    price: '$39.99',
     description: 'Complete brake system check',
     category: 'Safety'
   },
-  { 
-    id: 4, 
-    name: 'Battery Check', 
-    price: '$19.99', 
-    duration: '15 min', 
+  {
+    id: 4,
+    name: 'Battery Check',
+    price: '$19.99',
     description: 'Battery health and charging test',
     category: 'Maintenance'
   },
-  { 
-    id: 5, 
-    name: 'Air Filter Replacement', 
-    price: '$34.99', 
-    duration: '25 min', 
+  {
+    id: 5,
+    name: 'Air Filter Replacement',
+    price: '$34.99',
     description: 'Replace engine air filter',
     category: 'Maintenance'
   },
-  { 
-    id: 6, 
-    name: 'Wheel Alignment', 
-    price: '$79.99', 
-    duration: '60 min', 
+  {
+    id: 6,
+    name: 'Wheel Alignment',
+    price: '$79.99',
     description: 'Four-wheel alignment service',
     category: 'Maintenance'
   },
-  { 
-    id: 7, 
-    name: 'Transmission Service', 
-    price: '$129.99', 
-    duration: '90 min', 
+  {
+    id: 7,
+    name: 'Transmission Service',
+    price: '$129.99',
     description: 'Transmission fluid change and inspection',
     category: 'Major Service'
   },
-  { 
-    id: 8, 
-    name: 'Full Vehicle Inspection', 
-    price: '$89.99', 
-    duration: '120 min', 
+  {
+    id: 8,
+    name: 'Full Vehicle Inspection',
+    price: '$89.99',
     description: 'Comprehensive vehicle health check',
     category: 'Inspection'
   },
-  { 
-    id: 9, 
-    name: 'Coolant Flush', 
-    price: '$69.99', 
-    duration: '45 min', 
+  {
+    id: 9,
+    name: 'Coolant Flush',
+    price: '$69.99',
     description: 'Complete cooling system flush',
     category: 'Maintenance'
   },
-  { 
-    id: 10, 
-    name: 'Wiper Blade Replacement', 
-    price: '$24.99', 
-    duration: '10 min', 
+  {
+    id: 10,
+    name: 'Wiper Blade Replacement',
+    price: '$24.99',
     description: 'Replace front wiper blades',
     category: 'Maintenance'
   },
@@ -120,7 +109,8 @@ const PAGE_CONFIG = {
 
 interface ServicePageProps {
   services?: Service[];
-  onBooking?: (selectedServiceIds: number[], services: Service[]) => void;
+  // onBooking receives selected ids, selected service objects and optional endDate (yyyy-mm-dd)
+  onBooking?: (selectedServiceIds: number[], services: Service[], endDate?: string) => void;
   config?: Partial<typeof PAGE_CONFIG>;
 }
 
@@ -155,7 +145,7 @@ const ServicePage: React.FC<ServicePageProps> = ({
     }, 0).toFixed(2);
   };
 
-  const handleBooking = (): void => {
+  const handleBooking = (endDate?: string): void => {
     if (selectedServices.length === 0) {
       alert('Please select at least one service');
       return;
@@ -167,10 +157,10 @@ const ServicePage: React.FC<ServicePageProps> = ({
 
     // If custom onBooking handler provided, use it
     if (onBooking) {
-      onBooking(selectedServices, selectedServiceObjects);
+      onBooking(selectedServices, selectedServiceObjects, endDate);
     } else {
       // Default behavior
-      alert(`Booking confirmed for ${selectedServices.length} service(s)!\nTotal: $${getTotalCost()}`);
+      alert(`Booking confirmed for ${selectedServices.length} service(s)!\nTotal: $${getTotalCost()}${endDate ? `\nDesired completion: ${endDate}` : ''}`);
     }
   };
 

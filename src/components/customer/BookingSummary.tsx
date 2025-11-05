@@ -4,13 +4,13 @@ interface Service {
   id: number;
   name: string;
   price: string;
-  duration: string;
 }
 
 interface Props {
   selectedServiceIds: number[];
   services: Service[];
-  onBook: () => void;
+  // onBook receives an optional endDate in ISO format (yyyy-mm-dd)
+  onBook: (endDate?: string) => void;
   primaryColor?: string;
   bookingButtonText?: string;
   dark?: boolean;
@@ -33,17 +33,12 @@ const BookingSummary: React.FC<Props> = ({
       .toFixed(2);
   };
 
-  const getTotalDuration = (): number => {
-    return selectedServiceIds.reduce((total, id) => {
-      const s = services.find(x => x.id === id);
-      return total + parseInt((s?.duration || '0').toString());
-    }, 0);
-  };
+
+  const [endDate, setEndDate] = React.useState<string | undefined>(undefined);
 
   const containerBg = dark ? 'bg-[#2a2a2a]' : 'bg-white';
   const titleColor = dark ? 'text-gray-200' : 'text-gray-800';
   const textColor = dark ? 'text-gray-300' : 'text-gray-700';
-  const muted = dark ? 'text-gray-400' : 'text-gray-600';
 
   return (
     <div className={`sticky p-6 ${containerBg} rounded-lg shadow-md top-8`}>
@@ -66,18 +61,24 @@ const BookingSummary: React.FC<Props> = ({
           </div>
 
           <div className="pt-4 mb-6 space-y-2 border-t">
-            <div className="flex items-center justify-between">
-              <span className={`${muted}`}>Total Duration:</span>
-              <span className="font-semibold text-gray-200">{getTotalDuration()} min</span>
-            </div>
             <div className="flex items-center justify-between text-lg">
               <span className="font-bold text-gray-200">Total Cost:</span>
               <span className={`font-bold text-${primaryColor}-600`}>${getTotalCost()}</span>
             </div>
           </div>
 
+          <div className="mb-4">
+            <label className="block mb-2 text-sm text-gray-300">Desired completion date</label>
+            <input
+              type="date"
+              value={endDate || ''}
+              onChange={(e) => setEndDate(e.target.value || undefined)}
+              className={`w-full px-3 py-2 rounded border ${dark ? 'bg-[#1a1a1a] text-gray-200 border-gray-600' : 'bg-white text-gray-800 border-gray-300'}`}
+            />
+          </div>
+
           <button
-            onClick={onBook}
+            onClick={() => onBook(endDate)}
             className={`w-full bg-${primaryColor}-600 text-white py-3 rounded-lg font-semibold hover:bg-${primaryColor}-700 transition duration-200`}
           >
             {bookingButtonText}

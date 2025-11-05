@@ -5,8 +5,8 @@ interface CustomService {
   id: number;
   name: string;
   price: string;
-  duration: string;
   description: string;
+  endDate?: string;
   status?: 'pending' | 'in-progress' | 'completed';
   createdAt?: string;
 }
@@ -31,6 +31,9 @@ const ProjectCard: React.FC<Props> = ({ service, onEdit, onDelete, showStatus = 
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <h3 className={`text-lg font-bold ${titleColor}`}>{service.name}</h3>
+          {service.endDate && (
+            <p className={`mt-1 text-sm ${metaColor}`}>Desired completion: {new Date(service.endDate).toLocaleDateString()}</p>
+          )}
           {showCreatedDate && service.createdAt && (
             <p className={`mt-1 text-xs ${metaColor}`}>Created: {new Date(service.createdAt).toLocaleDateString()}</p>
           )}
@@ -61,7 +64,6 @@ const ProjectCard: React.FC<Props> = ({ service, onEdit, onDelete, showStatus = 
 
       <div className="flex items-center justify-between pt-3 border-t border-gray-700">
         <span className={`text-xl font-bold text-${primaryColor}-400`}>{service.price}</span>
-        <span className={`${dark ? 'text-gray-400' : 'text-sm text-gray-500'}`}>{service.duration}</span>
       </div>
     </div>
   );
