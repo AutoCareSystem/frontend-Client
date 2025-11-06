@@ -1,5 +1,5 @@
 import { apiClient } from "./config";
-import {
+import type {
   CustomerProfile,
   UpdateProfileRequest,
   UpdateVehicleRequest,
@@ -8,8 +8,19 @@ import {
 class ProfileService {
   // Get customer profile
   async getProfile(userId: number): Promise<CustomerProfile> {
-    const response = await apiClient.get(`/api/Profile/customer/${userId}`);
-    return response.data;
+    try {
+      console.log('Fetching profile for userId:', userId);
+      const response = await apiClient.get(`/api/Profile/customer/${userId}`);
+      console.log('Profile response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching profile:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        error: error.message
+      });
+      throw error;
+    }
   }
 
   // Update profile info

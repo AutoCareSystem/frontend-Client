@@ -1,5 +1,4 @@
 import React from "react";
-import type { UserInfo } from "../../types/profile.types";
 
 interface ProfileHeaderProps {
   name: string;
