@@ -9,7 +9,7 @@ export default function Projects() {
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar />
+      <Sidebar role="employee" />
 
       <main className="flex-1 p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold text-red-500 mb-6">Projects</h1>
