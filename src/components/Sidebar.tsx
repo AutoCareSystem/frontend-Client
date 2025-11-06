@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  Home, Clock, Folder, User, Settings, Calendar, MessageCircle, LogOut
+  Home, Clock, Folder, User, Settings, Calendar, MessageCircle, LogOut, Users
 } from "lucide-react";
 import { Wrench } from "lucide-react";
 
@@ -22,7 +22,8 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Dashboard", path: "/employee/dashboard", icon: <Home size={20} /> },
     { name: "Time Logs", path: "/employee/timelogs", icon: <Clock size={20} /> },
     { name: "Projects", path: "/employee/projects", icon: <Folder size={20} /> },
-    { name: "Services", path: "/employee/services", icon: <Wrench size={20} /> },
+  { name: "Services", path: "/employee/services", icon: <Wrench size={20} /> },
+  { name: "Users", path: "/employee/users", icon: <Users size={20} /> },
     { name: "Appointments", path: "/employee/appointments", icon: <Calendar size={20} /> },
     { name: "Profile", path: "/employee/profile", icon: <User size={20} /> },
   ];
