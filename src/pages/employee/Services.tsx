@@ -1,5 +1,7 @@
 import Sidebar from "../../components/Sidebar";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { fetchServices } from "../../api/services";
+import type { ServiceDto } from "../../api/services";
 
 type ServiceItem = {
   id: number;
@@ -43,6 +45,9 @@ const DUMMY_SERVICES: ServiceItem[] = [
 
 export default function Services() {
   const [services, setServices] = useState<ServiceItem[]>(DUMMY_SERVICES);
+  const [catalog, setCatalog] = useState<ServiceDto[] | null>(null);
+  const [loadingCatalog, setLoadingCatalog] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
   const [selected, setSelected] = useState<ServiceItem | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("All");
   const [filterType, setFilterType] = useState<string>("All");
@@ -55,6 +60,27 @@ export default function Services() {
     setServices(prev => prev.map(s => s.id === id ? { ...s, status } : s));
     setSelected(prev => prev && prev.id === id ? { ...prev, status } : prev);
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoadingCatalog(true);
+      try {
+        const data = await fetchServices();
+        if (!mounted) return;
+        setCatalog(data);
+      } catch (err: any) {
+        if (!mounted) return;
+        setCatalogError(err?.message || 'Failed to load services');
+      } finally {
+        if (!mounted) return;
+        setLoadingCatalog(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
@@ -110,6 +136,30 @@ export default function Services() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-2xl font-semibold mb-4">Available Services (catalog)</h2>
+          {loadingCatalog && <div className="text-sm text-gray-300 mb-2">Loading services catalog...</div>}
+          {catalogError && <div className="text-sm text-red-500 mb-2">{catalogError}</div>}
+          {catalog && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {catalog.map(c => (
+                <div key={c.serviceID ?? c.code} className="bg-[#2a2a2a] p-4 rounded border border-gray-700">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-semibold">{c.title}</div>
+                      <div className="text-sm text-gray-400">{c.description}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-300">{c.duration ?? '—'} min</div>
+                      <div className="text-red-500 font-bold">{typeof c.price === 'number' ? `$${c.price.toFixed(2)}` : '—'}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {selected && (
