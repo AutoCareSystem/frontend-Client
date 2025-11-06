@@ -1,164 +1,261 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
 import Sidebar from "../../components/Sidebar";
-import { useMemo, useState, useEffect } from "react";
-import type { ReactNode } from "react";
-import { getEmployeeProfile } from "../../api/profile";
-import { fetchProjects } from "../../api/projects";
-import { fetchServices } from "../../api/services";
-import type { EmployeeProfileDto } from "../../api/profile";
+import { BarChart2, CalendarDays, ClipboardList, Users } from "lucide-react";
+import StatsCard from "../../components/StatsCard";
+import SimpleBarChart from "../../components/charts/SimpleBarChart";
+import SimpleLineChart from "../../components/charts/SimpleLineChart";
 
-type MiniStat = { title: string; value: number; icon?: ReactNode };
-
-type Appointment = {
-  id: number;
-  customer: string;
-  start: string;
-  end: string;
-  status: string;
-};
+type MiniStat = { title: string; value: number; icon?: any; color?: string };
 
 export default function EmployeeDashboard() {
-  const [profile, setProfile] = useState<EmployeeProfileDto | null>(null);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [services, setServices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [profile] = useState({
+    name: "Shireen Shamil",
+    position: "Senior Technician",
+    hourlyRate: 1200,
+    totalAppointments: 128,
+    completedAppointments: 110,
+  });
 
-  // derived stats
-  const stats: MiniStat[] = [
-    { title: "Active Projects", value: projects.length },
-    { title: "Total Appointments", value: profile?.totalAppointments ?? 0 },
-    { title: "Completed Appointments", value: profile?.completedAppointments ?? 0 },
-    { title: "Upcoming Services", value: profile?.recentAppointments ? profile.recentAppointments.filter((r: any) => r.appointmentType?.toLowerCase?.() === 'service').length : 0 },
+  const mockProjects = [
+    { id: 1, title: "Engine Overhaul - Project A", customer: "John Doe", status: "Approved", due: "2025-11-05" },
+    { id: 2, title: "Paint & Polish - Job 12", customer: "Acme Corp", status: "Pending", due: "2025-11-10" },
+    { id: 3, title: "Brake Replacement", customer: "Sarah Fernando", status: "Approved", due: "2025-11-02" },
   ];
 
-  const upcoming = useMemo(() => (profile?.recentAppointments ?? []).slice(0, 5), [profile]);
+  const mockAppointments = [
+    { id: 101, title: "Full Car Service", customer: "Kevin Perera", date: "2025-11-12T09:00:00Z", status: "Approved" },
+    { id: 102, title: "Brake Inspection", customer: "Sarah Fernando", date: "2025-11-13T11:00:00Z", status: "Pending" },
+    { id: 103, title: "Engine Diagnostics", customer: "John Doe", date: "2025-11-14T14:00:00Z", status: "Approved" },
+  ];
 
-  // derive pending services from recent appointments (backend shape may vary)
-  const pendingServices = useMemo(() => {
-    const items = profile?.recentAppointments ?? [];
-    return items.filter((r: any) => (r.appointmentType?.toLowerCase?.() === 'service' || (r.AppointmentType && String(r.AppointmentType).toLowerCase() === 'service')) && (String(r.status || r.Status || '').toLowerCase() === 'pending'));
-  }, [profile]);
+  const mockServices = [
+    { id: 201, title: "Full Car Service", customer: "Kevin Perera", date: "2025-11-12T09:00:00Z", status: "Approved" },
+    { id: 202, title: "Interior Cleaning", customer: "Sara Lee", date: "2025-11-15T10:00:00Z", status: "Pending" },
+  ];
 
-  useEffect(() => {
-    let mounted = true;
+  const stats: MiniStat[] = [
+    { title: "Active Projects", value: mockProjects.filter(p => p.status === "Approved").length, icon: ClipboardList, color: "from-yellow-400 to-yellow-600" },
+    { title: "Upcoming Appointments", value: mockAppointments.filter(a => new Date(a.date) > new Date()).length, icon: CalendarDays, color: "from-green-400 to-green-600" },
+    { title: "Completed Appointments", value: profile.completedAppointments, icon: BarChart2, color: "from-blue-400 to-blue-600" },
+    { title: "Team Members", value: 6, icon: Users, color: "from-purple-400 to-purple-600" },
+  ];
 
-    function getUserIdFromToken(): string | null {
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) return null;
-        const parts = token.split('.');
-        if (parts.length < 2) return null;
-        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-        const id = payload.userId ?? payload.userID ?? payload.sub ?? payload.nameid ?? null;
-        return id == null ? null : String(id);
-      } catch {
-        return null;
-      }
-    }
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const uidFromStorage = localStorage.getItem('userId');
-        const uid = uidFromStorage ? uidFromStorage : getUserIdFromToken();
-        if (!uid) {
-          throw new Error('No userId available. Please sign in.');
-        }
-
-        const [prof, projs, servs] = await Promise.all([
-          getEmployeeProfile(uid),
-          fetchProjects().catch(() => []),
-          fetchServices().catch(() => []),
-        ]);
-
-        if (!mounted) return;
-        setProfile(prof as EmployeeProfileDto);
-        setProjects(projs ?? []);
-        setServices(servs ?? []);
-      } catch (err: any) {
-        if (!mounted) return;
-        setError(err?.message || 'Failed to load dashboard data');
-      } finally {
-        if (!mounted) return;
-        setLoading(false);
-      }
-    };
-
-    load();
-    return () => { mounted = false; };
-  }, []);
+  const upcoming = useMemo(() => mockAppointments.slice(0, 5), []);
+  const pendingServices = useMemo(() => mockServices.filter(s => s.status === "Pending"), []);
 
   return (
-    <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
+    <div className="flex h-screen bg-gradient-to-br from-[#0a0a0b] via-[#101113] to-[#16181b] text-gray-100 overflow-hidden">
       <Sidebar role="employee" />
-      <main className="flex-1 p-8 overflow-y-auto">
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-red-500">Employee Dashboard</h1>
-          <div className="flex gap-3">
-            <Link to="/employee/appointments" className="bg-[#2a2a2a] px-4 py-2 rounded hover:bg-red-600 transition">New Appointment</Link>
-            <Link to="/employee/services" className="bg-[#2a2a2a] px-4 py-2 rounded hover:bg-red-600 transition">Services</Link>
-            <Link to="/employee/projects" className="bg-[#2a2a2a] px-4 py-2 rounded hover:bg-red-600 transition">Projects</Link>
-          </div>
-        </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {stats.map((s) => (
-            <div key={s.title} className="bg-[#2a2a2a] p-6 rounded-xl shadow-md border border-gray-700">
-              <h3 className="text-gray-400">{s.title}</h3>
-              <p className="text-3xl font-bold mt-2 text-red-500">{s.value}</p>
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto relative">
+        {/* Glow background */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(255,0,0,0.08),transparent_50%)] blur-3xl"></div>
+
+        <div className="max-w-7xl mx-auto space-y-10">
+          {/* Header */}
+          <motion.header
+            className="flex items-center justify-between"
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div>
+              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent drop-shadow-lg">
+                Welcome back, {profile.name}
+              </h1>
+              <p className="text-sm text-gray-400 mt-2">
+                {profile.position} • Hourly Rate:{" "}
+                <span className="text-red-400 font-semibold">{profile.hourlyRate} LKR</span>
+              </p>
             </div>
-          ))}
-        </section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-[#2a2a2a] p-6 rounded-xl border border-gray-700">
-            <h2 className="text-xl font-semibold mb-4">Upcoming Appointments</h2>
-            <ul className="space-y-3">
-              {upcoming.map((a: any, idx: number) => {
-                const customerName = a.customerName || a.CustomerName || (a.customer && a.customer.user && a.customer.user.name) || 'Unknown';
-                const dateStr = a.date || a.Date || a.startDate || a.start || null;
-                const endStr = a.endDate || a.EndDate || a.end || null;
-                const status = a.status || a.Status || 'Pending';
+            <div className="flex gap-3">
+              {["Services", "Projects", "Appointments"].map((label) => (
+                <Link
+                  key={label}
+                  to={`/employee/${label.toLowerCase()}`}
+                  className="bg-[#1e1f24]/60 backdrop-blur-md border border-[#2a2b30] px-4 py-2 rounded-lg hover:bg-red-600 hover:text-white hover:shadow-red-600/40 transition-all"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </motion.header>
 
-                return (
-                  <li key={a.appointmentID ?? a.AppointmentID ?? idx} className="flex items-center justify-between p-3 bg-[#161616] rounded">
+          {/* Stats Section */}
+          <motion.section
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.7 }}
+          >
+            {stats.map((s, i) => (
+              <motion.div
+                key={s.title}
+                className={`p-[1px] rounded-2xl bg-gradient-to-br ${s.color} shadow-lg hover:shadow-xl transition-transform hover:scale-[1.03]`}
+                whileHover={{ y: -5 }}
+                transition={{ type: "spring", stiffness: 200 }}
+              >
+                <div className="bg-[#111214]/90 rounded-2xl p-5">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium">{customerName}</div>
-                      <div className="text-sm text-gray-400">{dateStr ? `${new Date(dateStr).toLocaleString()}${endStr ? ' - ' + new Date(endStr).toLocaleString() : ''}` : 'No date'}</div>
+                      <h3 className="text-sm text-gray-400">{s.title}</h3>
+                      <div className="text-3xl font-semibold mt-1">{s.value}</div>
                     </div>
-                    <div className="text-sm">
-                      <span className={`px-2 py-1 rounded text-xs ${String(status).toLowerCase() === 'pending' ? 'bg-yellow-600 text-black' : String(status).toLowerCase() === 'approved' ? 'bg-green-600' : 'bg-gray-600'}`}>{status}</span>
+                    <div className="p-3 bg-black/40 rounded-xl">
+                      <s.icon size={22} />
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                  </div>
+                  <div className="mt-3">
+                    <SimpleLineChart
+                      data={[2, 3, 4, 6, 5, 7]}
+                      color={
+                        (s.color ?? "").includes("blue")
+                          ? "#3b82f6"
+                          : (s.color ?? "").includes("green")
+                          ? "#22c55e"
+                          : (s.color ?? "").includes("yellow")
+                          ? "#eab308"
+                          : "#a855f7"
+                      }
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.section>
 
-          <div className="bg-[#2a2a2a] p-6 rounded-xl border border-gray-700">
-            <h2 className="text-xl font-semibold mb-4">Pending Services</h2>
-            <ul className="space-y-3">
-              {pendingServices.map((s: any, i: number) => {
-                const customerName = s.customerName || s.CustomerName || (s.customer && s.customer.user && s.customer.user.name) || 'Unknown';
-                const type = s.appointmentType || s.AppointmentType || s.appointmentType || 'Service';
-                const dateStr = s.date || s.Date || s.startDate || null;
-                return (
-                  <li key={s.appointmentID ?? s.AppointmentID ?? i} className="flex items-center justify-between p-3 bg-[#161616] rounded">
+          {/* Charts */}
+          <motion.section
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+          >
+            <div className="lg:col-span-2 bg-[#111214]/90 border border-[#2a2b30] rounded-2xl p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Appointments Trend</h2>
+                <span className="text-sm text-gray-400">Last 6 months</span>
+              </div>
+              <SimpleBarChart
+                data={[12, 18, 10, 22, 28, 16]}
+                labels={["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"]}
+                height={150}
+                color="#ef4444"
+              />
+            </div>
+
+            <div className="bg-[#111214]/90 border border-[#2a2b30] rounded-2xl p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Monthly Revenue</h2>
+                <span className="text-sm text-gray-400">LKR</span>
+              </div>
+              <SimpleBarChart
+                data={[80, 120, 90, 140, 165, 130]}
+                labels={["Jun", "Jul", "Aug", "Sep", "Oct", "Nov"]}
+                height={150}
+                color="#6366f1"
+              />
+            </div>
+          </motion.section>
+
+          {/* Upcoming & Pending */}
+          <motion.section
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.7 }}
+          >
+            <div className="lg:col-span-2 bg-[#111214]/90 border border-[#2a2b30] rounded-2xl p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Upcoming Appointments</h2>
+                <Link to="/employee/appointments" className="text-sm text-gray-300 underline">
+                  View all
+                </Link>
+              </div>
+
+              <ul className="space-y-3">
+                {upcoming.map((a) => (
+                  <motion.li
+                    key={a.id}
+                    className="flex items-center justify-between p-4 bg-[#16181b]/80 rounded-xl hover:bg-[#1e2024] transition-all"
+                    whileHover={{ scale: 1.02 }}
+                  >
                     <div>
-                      <div className="font-medium">{customerName}</div>
-                      <div className="text-sm text-gray-400">{type} • {dateStr ? new Date(dateStr).toLocaleString() : 'No date'}</div>
+                      <div className="font-medium">{a.title}</div>
+                      <div className="text-sm text-gray-400">
+                        {a.customer} • {new Date(a.date).toLocaleString()}
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Link to="/employee/services" className="text-sm bg-green-600 px-2 py-1 rounded">View</Link>
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full font-semibold ${
+                        a.status === "Pending"
+                          ? "bg-yellow-400/20 text-yellow-400"
+                          : "bg-green-500/20 text-green-400"
+                      }`}
+                    >
+                      {a.status}
+                    </span>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-[#111214]/90 border border-[#2a2b30] rounded-2xl p-6 backdrop-blur-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Pending Services</h2>
+                <Link to="/employee/services" className="text-sm text-gray-300 underline">
+                  Manage
+                </Link>
+              </div>
+
+              <ul className="space-y-3">
+                {pendingServices.map((s) => (
+                  <motion.li
+                    key={s.id}
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center justify-between p-4 bg-[#16181b]/80 rounded-xl hover:bg-[#1e2024] transition"
+                  >
+                    <div>
+                      <div className="font-medium">{s.title}</div>
+                      <div className="text-sm text-gray-400">
+                        {s.customer} • {new Date(s.date).toLocaleString()}
+                      </div>
                     </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
+                    <button className="bg-gradient-to-r from-green-500 to-green-700 px-4 py-1 rounded-md text-sm font-semibold hover:scale-105 transition">
+                      Assign
+                    </button>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+          </motion.section>
+
+          {/* Floating Add Button */}
+          <motion.div
+            className="fixed bottom-8 right-8"
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Link
+              to="/employee/services/add"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-700 px-6 py-3 rounded-full shadow-lg shadow-red-800/40 hover:shadow-red-600/60 text-white font-semibold"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="hidden md:inline">Add Service</span>
+            </Link>
+          </motion.div>
+        </div>
       </main>
     </div>
   );
