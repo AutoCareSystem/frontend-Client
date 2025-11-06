@@ -1,0 +1,36 @@
+import axios from "axios";
+
+export const API_BASE_URL = "http://localhost:5093";
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  },
+  withCredentials: true
+});
+
+// Add token to requests
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle response errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired - redirect to login
+      localStorage.clear();
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;

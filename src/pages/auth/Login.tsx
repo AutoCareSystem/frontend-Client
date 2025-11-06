@@ -16,10 +16,19 @@ export default function Login() {
         password,
       });
 
-      // Save tokens
+      console.log('Login response:', res.data);
+      
+      // Save tokens and user info
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("role", res.data.role);
+      localStorage.setItem("userId", res.data.userId);
+      
+      console.log('Stored values:', {
+        accessToken: localStorage.getItem("accessToken"),
+        role: localStorage.getItem("role"),
+        userId: localStorage.getItem("userId")
+      });
 
       // Navigate based on backend role
       if (res.data.role === "customer") navigate("/customer/dashboard");

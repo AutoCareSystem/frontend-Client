@@ -15,7 +15,6 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Dashboard", path: "/customer/dashboard", icon: <Home size={20} /> },
     { name: "Appointments", path: "/customer/appointments", icon: <Calendar size={20} /> },
     { name: "Modifications", path: "/customer/modifications", icon: <Folder size={20} /> },
-    { name: "Chatbot", path: "/customer/chatbot", icon: <MessageCircle size={20} /> },
   ];
 
   const employeeMenu = [
