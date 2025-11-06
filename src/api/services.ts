@@ -1,5 +1,3 @@
-import axios from "axios";
-
 export type ServiceDto = {
   serviceID?: number;
   code?: string;
@@ -10,64 +8,22 @@ export type ServiceDto = {
   status?: string;
 };
 
+// In-memory dummy dataset for services (frontend-only)
+const MOCK_SERVICES: ServiceDto[] = [
+  { serviceID: 1, code: 'SRV-FULL-01', title: 'Full Car Service', description: 'Complete inspection, oil change, and safety checks.', duration: 120, price: 24000, status: 'Active' },
+  { serviceID: 2, code: 'SRV-INT-01', title: 'Interior Cleaning', description: 'Deep interior cleaning and vacuuming.', duration: 60, price: 5000, status: 'Active' },
+  { serviceID: 3, code: 'SRV-ENG-01', title: 'Engine Tuneup', description: 'Engine diagnostics and tuneup.', duration: 180, price: 35000, status: 'Inactive' },
+];
+
 export async function fetchServices(): Promise<ServiceDto[]> {
-  const base = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5093";
-  const normalized = base.replace(/\/+$/g, '');
-  const urls = [
-    `${normalized}/api/services`,
-    // fallback to the other port you mentioned where service endpoints may live
-    `${normalized.replace(/:\d+$/, '')}:5292/api/services`,
-  ];
-
-  const token = localStorage.getItem("accessToken");
-  const headers: any = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  for (const url of urls) {
-    try {
-      const res = await axios.get(url, { headers, withCredentials: true });
-      if (res?.data && Array.isArray(res.data)) return res.data as ServiceDto[];
-    } catch (e) {
-      // try next
-    }
-  }
-
-  throw new Error("Failed to fetch services from backend");
+  // Return a copy so callers can mutate without affecting the mock source
+  return Promise.resolve(MOCK_SERVICES.map(s => ({ ...s })));
 }
 
 export async function createService(payload: ServiceDto): Promise<ServiceDto> {
-  const base = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5093";
-  const normalized = base.replace(/\/+$/g, '');
-  const urls: string[] = [];
-  urls.push(`${normalized}/api/services`);
-  // build a safe fallback using the URL API to avoid malformed strings
-  try {
-    const parsed = new URL(base);
-    const hostFallback = `${parsed.protocol}//${parsed.hostname}:5292/api/services`;
-    urls.push(hostFallback);
-  } catch (e) {
-    // fallback to literal localhost:5292
-    urls.push(`http://localhost:5292/api/services`);
-  }
-  // explicit localhost fallback as last resort
-  if (!urls.includes(`http://localhost:5292/api/services`)) urls.push(`http://localhost:5292/api/services`);
-
-  const token = localStorage.getItem("accessToken");
-  const headers: any = { 'Content-Type': 'application/json' };
-  if (token) headers.Authorization = `Bearer ${token}`;
-
-  let lastErr: any = null;
-  for (const url of urls) {
-    try {
-      const res = await axios.post(url, payload, { headers, withCredentials: true });
-      if (res?.data) return res.data as ServiceDto;
-    } catch (e: any) {
-      lastErr = e;
-      // try next
-    }
-  }
-
-  const tried = urls.join(', ');
-  const msg = lastErr ? `${lastErr?.message || String(lastErr)} (tried: ${tried})` : `No response from backends (tried: ${tried})`;
-  throw new Error(`Failed to create service: ${msg}`);
+  const nextId = MOCK_SERVICES.reduce((m, s) => Math.max(m, s.serviceID ?? 0), 0) + 1;
+  const created: ServiceDto = { serviceID: nextId, ...payload };
+  MOCK_SERVICES.push(created);
+  return Promise.resolve({ ...created });
 }
+
