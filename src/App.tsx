@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import CustomerDashboard from "./pages/customer/Dashboard";
 import BookAppointment from "./pages/customer/BookAppointment";
 import Modifications from "./pages/customer/Modifications";
@@ -17,6 +22,9 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
