@@ -1,6 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  Home, Clock, Folder, User, Settings, Calendar, MessageCircle, LogOut
+  Home,
+  Clock,
+  Folder,
+  User,
+  Calendar,
+  MessageCircle,
+  LogOut,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -11,17 +17,49 @@ export default function Sidebar({ role }: SidebarProps) {
   const { pathname } = useLocation();
 
   const customerMenu = [
-    { name: "Dashboard", path: "/customer/dashboard", icon: <Home size={20} /> },
-    { name: "Appointments", path: "/customer/appointments", icon: <Calendar size={20} /> },
-    { name: "Modifications", path: "/customer/modifications", icon: <Folder size={20} /> },
-    { name: "Chatbot", path: "/customer/chatbot", icon: <MessageCircle size={20} /> },
+    {
+      name: "Dashboard",
+      path: "/customer/dashboard",
+      icon: <Home size={20} />,
+    },
+    {
+      name: "Appointments",
+      path: "/customer/appointments",
+      icon: <Calendar size={20} />,
+    },
+    {
+      name: "Modifications",
+      path: "/customer/modifications",
+      icon: <Folder size={20} />,
+    },
+    {
+      name: "Chatbot",
+      path: "/customer/chatbot",
+      icon: <MessageCircle size={20} />,
+    },
   ];
 
   const employeeMenu = [
-    { name: "Dashboard", path: "/employee/dashboard", icon: <Home size={20} /> },
-    { name: "Time Logs", path: "/employee/timelogs", icon: <Clock size={20} /> },
-    { name: "Projects", path: "/employee/projects", icon: <Folder size={20} /> },
-    { name: "Appointments", path: "/employee/appointments", icon: <Calendar size={20} /> },
+    {
+      name: "Dashboard",
+      path: "/employee/dashboard",
+      icon: <Home size={20} />,
+    },
+    {
+      name: "Time Logs",
+      path: "/employee/timelogs",
+      icon: <Clock size={20} />,
+    },
+    {
+      name: "Projects",
+      path: "/employee/projects",
+      icon: <Folder size={20} />,
+    },
+    {
+      name: "Appointments",
+      path: "/employee/appointments",
+      icon: <Calendar size={20} />,
+    },
     { name: "Profile", path: "/employee/profile", icon: <User size={20} /> },
   ];
 
