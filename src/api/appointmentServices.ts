@@ -18,7 +18,7 @@ export type AppointmentServiceDto = {
 };
 
 export async function fetchAppointmentServices(): Promise<AppointmentServiceDto[]> {
-  const base = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5093";
+  const base = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5292";
   const normalized = base.replace(/\/+$/g, '');
   const urls = [
     // common variants (some backends use different casing or singular/plural)

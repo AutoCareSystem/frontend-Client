@@ -110,8 +110,8 @@ export default function Services() {
 
         <div className="mt-8">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold mb-4">Service Appointments</h2>
-            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-semibold mb-4">Service Appointments</h2>
+              <div className="flex items-center gap-2">
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -130,7 +130,8 @@ export default function Services() {
                 <option>Full</option>
                 <option>Custom</option>
               </select>
-              <button onClick={() => void loadAppointmentServices()} className="bg-gray-600 hover:bg-gray-700 text-sm px-3 py-1 rounded">Retry</button>
+                <button onClick={() => void loadAppointmentServices()} className="bg-gray-600 hover:bg-gray-700 text-sm px-3 py-1 rounded">Retry</button>
+                <a href="/employee/services/add" className="bg-green-600 hover:bg-green-700 text-sm px-3 py-1 rounded">Add Service</a>
             </div>
           </div>
 

@@ -10,6 +10,7 @@ import Projects from "./pages/employee/Projects";
 import Appointments from "./pages/employee/Appointments";
 import Profile from "./pages/employee/Profile";
 import Services from "./pages/employee/Services";
+import AddService from "./pages/employee/AddService";
 import UserManagement from "./pages/employee/UserManagement";
 
 import Login from "./pages/auth/Login";
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/employee/timelogs" element={<TimeLogs />} />
         <Route path="/employee/projects" element={<Projects />} />
         <Route path="/employee/services" element={<Services />} />
+    <Route path="/employee/services/add" element={<AddService />} />
   <Route path="/employee/users" element={<UserManagement />} />
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />
