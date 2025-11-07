@@ -78,5 +78,34 @@ const MOCK_APPOINTMENT_SERVICES: AppointmentServiceDto[] = [
 ];
 
 export async function fetchAppointmentServices(): Promise<AppointmentServiceDto[]> {
+  // Try backend first, fall back to mock if unavailable
+  try {
+    const base = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5292';
+    // dynamic import axios to avoid adding at top-level if not present
+    // but axios is already a dependency; import normally for clarity
+    const axios = (await import('axios')).default;
+    const res = await axios.get(`${base}/api/Appointments/service`);
+    if (res && Array.isArray(res.data)) {
+      return res.data.map((s: any) => ({
+        appointmentID: s.appointmentID ?? s.appointmentId ?? s.id,
+        customerName: s.customerName,
+        customerEmail: s.customerEmail,
+        vehicleInfo: s.vehicleInfo,
+        startDate: s.startDate,
+        time: s.time,
+        status: s.status,
+        employeeName: s.employeeName,
+        serviceOption: s.serviceOption,
+        totalPrice: s.totalPrice,
+        packageName: s.packageName ?? null,
+        packageType: s.packageType ?? null,
+        packageServices: Array.isArray(s.packageServices) ? s.packageServices.map((ps: any) => ({ title: ps.title, price: ps.price })) : [],
+        customServices: Array.isArray(s.customServices) ? s.customServices.map((cs: any) => ({ title: cs.title, price: cs.price })) : [],
+      }));
+    }
+  } catch (err: any) {
+    console.warn('fetchAppointmentServices: backend request failed, using mock data', err?.message || err);
+  }
+
   return Promise.resolve(MOCK_APPOINTMENT_SERVICES.map(a => ({ ...a })));
 }

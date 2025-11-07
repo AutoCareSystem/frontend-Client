@@ -1,54 +1,15 @@
 import Sidebar from "../../components/Sidebar";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchAppointments } from "../../api/appointments";
+import type { AppointmentDto } from "../../api/appointments";
 
-type DummyAppt = {
-  id: number;
-  customer: string;
-  startDate: string;
-  endDate?: string;
-  type: "Service" | "Project";
-  status: "Pending" | "Approved" | "Completed" | "Rejected";
-  service: string;
-};
-
-const DUMMY: DummyAppt[] = [
-  {
-    id: 1,
-    customer: "John Doe",
-    startDate: "2025-10-29T10:00:00Z",
-    endDate: "2025-10-29T11:00:00Z",
-    type: "Service",
-    status: "Pending",
-    service: "Brake Replacement",
-  },
-  {
-    id: 2,
-    customer: "Alice Smith",
-    startDate: "2025-10-30T14:00:00Z",
-    endDate: "2025-10-30T16:00:00Z",
-    type: "Project",
-    status: "Approved",
-    service: "Paint & Polish",
-  },
-  {
-    id: 3,
-    customer: "Sam Turner",
-    startDate: "2025-10-31T09:30:00Z",
-    endDate: "2025-10-31T10:30:00Z",
-    type: "Service",
-    status: "Completed",
-    service: "Oil Change",
-  },
-  {
-    id: 4,
-    customer: "Linda Park",
-    startDate: "2025-11-01T10:30:00Z",
-    endDate: "2025-11-01T11:30:00Z",
-    type: "Project",
-    status: "Rejected",
-    service: "Custom Fabrication",
-  },
+// Local fallback dataset used only when backend is unavailable
+const DUMMY: AppointmentDto[] = [
+  { id: 1, customer: "John Doe", startDate: "2025-10-29T10:00:00Z", endDate: "2025-10-29T11:00:00Z", type: "Service", status: "Pending", service: "Brake Replacement" },
+  { id: 2, customer: "Alice Smith", startDate: "2025-10-30T14:00:00Z", endDate: "2025-10-30T16:00:00Z", type: "Project", status: "Approved", service: "Paint & Polish" },
+  { id: 3, customer: "Sam Turner", startDate: "2025-10-31T09:30:00Z", endDate: "2025-10-31T10:30:00Z", type: "Service", status: "Completed", service: "Oil Change" },
+  { id: 4, customer: "Linda Park", startDate: "2025-11-01T10:30:00Z", endDate: "2025-11-01T11:30:00Z", type: "Project", status: "Rejected", service: "Custom Fabrication" },
 ];
 
 export default function Appointments() {
@@ -56,15 +17,46 @@ export default function Appointments() {
   const [typeFilter, setTypeFilter] = useState<string>("All");
   const [selected, setSelected] = useState<number | null>(null);
 
-  const filteredList = useMemo(() => {
-    return DUMMY.filter(
-      (a) =>
-        (statusFilter === "All" || a.status === statusFilter) &&
-        (typeFilter === "All" || a.type === typeFilter)
-    );
+  const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params: any = {};
+        if (typeFilter !== 'All') params.type = typeFilter;
+        if (statusFilter !== 'All') params.status = statusFilter;
+        const data = await fetchAppointments(Object.keys(params).length ? params : undefined);
+        if (!mounted) return;
+        setAppointments(data.map(d => ({ ...d })));
+      } catch (err: any) {
+        console.warn('fetchAppointments failed, falling back to local data', err?.message || err);
+        if (!mounted) return;
+        setError(err?.message || 'Failed to load appointments');
+        setAppointments(DUMMY.map(d => ({ ...d })));
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
   }, [statusFilter, typeFilter]);
 
-  const getStatusColor = (status: DummyAppt["status"]) => {
+  const filteredList = useMemo(() => {
+    // server-side filtered when possible; additionally allow client-side filtering if user types are 'All'
+    return appointments.filter(a =>
+      (statusFilter === 'All' || (a.status ?? 'Unknown') === statusFilter) &&
+      (typeFilter === 'All' || (a.type ?? 'Unknown') === typeFilter)
+    );
+  }, [appointments, statusFilter, typeFilter]);
+
+  const getStatusColor = (status?: string) => {
     switch (status) {
       case "Pending":
         return "bg-yellow-500/20 text-yellow-400";
@@ -77,6 +69,14 @@ export default function Appointments() {
       default:
         return "bg-gray-500/20 text-gray-300";
     }
+  };
+
+  // Small helper: avoid rendering raw JSON objects stringified into the UI.
+  const sanitize = (s?: string | undefined) => {
+    if (!s) return undefined;
+    const t = String(s).trim();
+    if (t.startsWith('{') || t.startsWith('[')) return undefined;
+    return t;
   };
 
   return (
@@ -123,15 +123,7 @@ export default function Appointments() {
           <table className="w-full text-left text-sm">
             <thead className="bg-[#202020]/80 text-gray-300 uppercase tracking-wide">
               <tr>
-                {[
-                  "ID",
-                  "Customer",
-                  "Start",
-                  "End",
-                  "Type",
-                  "Service",
-                  "Status",
-                ].map((header) => (
+                {["ID", "Customer", "Start", "Status", "Actions"].map((header) => (
                   <th key={header} className="px-5 py-3 font-semibold">
                     {header}
                   </th>
@@ -139,7 +131,17 @@ export default function Appointments() {
               </tr>
             </thead>
             <tbody>
-              {filteredList.length === 0 ? (
+              {loading && (
+                <tr>
+                  <td colSpan={7} className="text-center py-6 text-gray-400">Loading appointments...</td>
+                </tr>
+              )}
+              {error && (
+                <tr>
+                  <td colSpan={7} className="text-center py-6 text-red-500">{error}</td>
+                </tr>
+              )}
+              {filteredList.length === 0 && !loading && !error ? (
                 <tr>
                   <td
                     colSpan={7}
@@ -149,131 +151,125 @@ export default function Appointments() {
                   </td>
                 </tr>
               ) : (
-                filteredList.map((a) => (
-                  <>
-                    <motion.tr
-                      key={a.id}
-                      layoutId={`row-${a.id}`}
-                      onClick={() =>
-                        setSelected((prev) =>
-                          prev === a.id ? null : a.id
-                        )
-                      }
-                      whileHover={{ scale: 1.01 }}
-                      className={`cursor-pointer border-t border-gray-800 hover:bg-[#1d1d1d] transition-all ${
-                        selected === a.id
-                          ? "bg-[#202020]"
-                          : ""
-                      }`}
-                    >
-                      <td className="px-5 py-3">{a.id}</td>
-                      <td className="px-5 py-3">{a.customer}</td>
-                      <td className="px-5 py-3">
-                        {new Date(a.startDate).toLocaleString()}
-                      </td>
-                      <td className="px-5 py-3">
-                        {a.endDate
-                          ? new Date(a.endDate).toLocaleString()
-                          : "-"}
-                      </td>
-                      <td className="px-5 py-3">{a.type}</td>
-                      <td className="px-5 py-3">{a.service}</td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            a.status
-                          )}`}
-                        >
-                          {a.status}
-                        </span>
-                      </td>
-                    </motion.tr>
-
-                    {/* Inline Detail Row */}
-                    <AnimatePresence>
-                      {selected === a.id && (
-                        <motion.tr
-                          key={`details-${a.id}`}
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="bg-[#161616]/80 border-t border-gray-800"
-                        >
-                          <td colSpan={7} className="px-8 py-5">
-                            <div className="grid grid-cols-2 gap-4 text-sm text-gray-300">
-                              <div>
-                                <p>
-                                  <span className="text-gray-400">
-                                    Appointment ID:
-                                  </span>{" "}
-                                  {a.id}
-                                </p>
-                                <p>
-                                  <span className="text-gray-400">
-                                    Customer:
-                                  </span>{" "}
-                                  {a.customer}
-                                </p>
-                                <p>
-                                  <span className="text-gray-400">
-                                    Type:
-                                  </span>{" "}
-                                  {a.type}
-                                </p>
-                                <p>
-                                  <span className="text-gray-400">
-                                    Service:
-                                  </span>{" "}
-                                  {a.service}
-                                </p>
-                              </div>
-                              <div>
-                                <p>
-                                  <span className="text-gray-400">
-                                    Start Time:
-                                  </span>{" "}
-                                  {new Date(
-                                    a.startDate
-                                  ).toLocaleString()}
-                                </p>
-                                <p>
-                                  <span className="text-gray-400">
-                                    End Time:
-                                  </span>{" "}
-                                  {a.endDate
-                                    ? new Date(a.endDate).toLocaleString()
-                                    : "-"}
-                                </p>
-                                <p className="mt-2">
-                                  <span className="text-gray-400">
-                                    Status:
-                                  </span>{" "}
-                                  <span
-                                    className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusColor(
-                                      a.status
-                                    )}`}
-                                  >
-                                    {a.status}
-                                  </span>
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="mt-4 text-right">
-                              <button
-                                onClick={() => setSelected(null)}
-                                className="bg-red-600 hover:bg-red-700 transition px-4 py-2 rounded-md font-medium text-white"
-                              >
-                                Close
-                              </button>
+                filteredList.map((a) => {
+                  const rowId = Number(a.id ?? a.appointmentID ?? 0);
+                  return (
+                    <Fragment key={rowId}>
+                      <motion.tr
+                        layoutId={`row-${rowId}`}
+                        whileHover={{ scale: 1.01 }}
+                        className={`border-t border-gray-800 transition-all ${
+                          selected === rowId ? "bg-[#202020]" : "hover:bg-[#1d1d1d]"
+                        }`}
+                      >
+                        <td className="px-5 py-3">{rowId}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex flex-col">
+                              <span className="font-medium">{sanitize(a.customerDisplay) ?? sanitize(a.customer) ?? a.vehiclePlate ?? '-'}</span>
+                              {a.vehiclePlate && (
+                                <span className="text-xs text-gray-400">{a.vehiclePlate}</span>
+                              )}
                             </div>
                           </td>
-                        </motion.tr>
-                      )}
-                    </AnimatePresence>
-                  </>
-                ))
+                        <td className="px-5 py-3">{a.startDate ? new Date(a.startDate).toLocaleString() : '-'}</td>
+                        <td className="px-5 py-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(a.status)}`}>{a.status ?? '-'}</span>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <button
+                            onClick={() => setSelected((prev) => (prev === rowId ? null : rowId))}
+                            aria-expanded={selected === rowId}
+                            className="px-3 py-1 bg-[#272727] hover:bg-[#2f2f2f] rounded-md text-sm"
+                          >
+                            {selected === rowId ? 'Hide' : 'View'}
+                          </button>
+                        </td>
+                      </motion.tr>
+
+                      {/* Inline Detail Row */}
+                      <AnimatePresence>
+                        {selected === rowId && (
+                          <motion.tr
+                            key={`details-${rowId}`}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="bg-[#161616]/80 border-t border-gray-800"
+                          >
+                            <td colSpan={7} className="px-8 py-5">
+                              <div className="grid grid-cols-2 gap-4 text-sm text-gray-300">
+                                <div>
+                                  <p>
+                                    <span className="text-gray-400">Appointment ID:</span>{" "}{a.id ?? a.appointmentID}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-400">Customer:</span>{" "}{sanitize(a.customerDisplay) ?? sanitize(a.customer) ?? a.vehiclePlate ?? '-'}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-400">Type:</span>{" "}{a.type ?? '-'}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-400">Service:</span>{" "}{a.serviceDisplay ?? '-'}
+                                  </p>
+                                  <p className="mt-2">
+                                    <span className="text-gray-400">Description:</span>{" "}
+                                    <span className="text-gray-300">{(a.raw?.serviceDetails?.servicePackage?.description) || (a.raw?.projectDetails?.projectDescription) || a.raw?.description || '-'}</span>
+                                  </p>
+                                </div>
+                                <div>
+                                  <p>
+                                    <span className="text-gray-400">Start Time:</span>{" "}{a.startDate ? new Date(a.startDate).toLocaleString() : '-'}
+                                  </p>
+                                  <p>
+                                    <span className="text-gray-400">End Time:</span>{" "}{a.endDate ? new Date(a.endDate).toLocaleString() : '-'}
+                                  </p>
+                                  <p className="mt-2">
+                                    <span className="text-gray-400">Status:</span>{" "}
+                                    <span className={`ml-2 px-2 py-1 rounded-full text-xs ${getStatusColor(a.status)}`}>{a.status ?? '-'}</span>
+                                  </p>
+                                  <p className="mt-2">
+                                    <span className="text-gray-400">Assigned To:</span>{" "}{a.raw?.employee?.user?.userName ?? a.raw?.employee?.userName ?? '-'}
+                                  </p>
+                                  <p className="mt-2">
+                                    <span className="text-gray-400">Vehicle:</span>{" "}{a.raw?.vehicle ? `${a.raw.vehicle.model ?? ''} • ${a.raw.vehicle.plateNumber ?? a.raw.vehicle.plate ?? '-'}` : '-'}
+                                  </p>
+                                  <p className="mt-2">
+                                    <span className="text-gray-400">Total Price:</span>{" "}{typeof a.totalPrice === 'number' ? `LKR ${a.totalPrice.toLocaleString()}` : '-'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="mt-4">
+                                <h4 className="text-sm text-gray-300 mb-2">Service Items</h4>
+                                {Array.isArray(a.raw?.appointmentServices) && a.raw.appointmentServices.length > 0 ? (
+                                  <ul className="list-disc list-inside text-sm text-gray-300">
+                                    {a.raw.appointmentServices.map((s: any, idx: number) => (
+                                      <li key={s?.appointmentServiceID ?? idx}>
+                                        {s?.service?.title ?? s?.service?.name ?? s?.serviceID ?? 'Service'} {s?.customPrice ? `— LKR ${s.customPrice}` : ''}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-sm text-gray-400">No service items listed.</p>
+                                )}
+
+                                <div className="mt-4 text-right">
+                                  <button
+                                    onClick={() => setSelected(null)}
+                                    className="bg-red-600 hover:bg-red-700 transition px-4 py-2 rounded-md font-medium text-white"
+                                  >
+                                    Close
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        )}
+                      </AnimatePresence>
+                    </Fragment>
+                  );
+                })
               )}
             </tbody>
           </table>
