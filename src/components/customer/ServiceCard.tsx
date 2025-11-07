@@ -47,7 +47,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       className={`p-4 border-2 rounded-lg transition-all duration-200 ${getBgColor()} ${getBorderColor()} ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:shadow-md'}`}
       onClick={() => !disabled && onToggle(service.id)}
     >
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex items-start justify-between mb-2">
         <h3 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-gray-800'}`}>
           {service.name}
         </h3>

@@ -1,93 +1,23 @@
-import React, { useState } from 'react';
-import { Wrench, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Wrench } from 'lucide-react';
 import ServiceCard from '../../components/customer/ServiceCard';
 import BookingSummary from '../../components/customer/BookingSummary';
 import Sidebar from '../../components/Sidebar';
+import { getServices } from '../../api/services';
+import type { Service } from '../../api/services';
+import { createAppointment, getCustomerAppointments, type Appointment } from '../../api/appointments';
+import type { AppointmentDto } from '../../api/appointments';
+import { useAuth } from '../../context/AuthContext';
 
-
-interface Service {
+interface Booking {
   id: number;
-  name: string;
-  price: string;
-  description: string;
-  category?: string;
+  services: Service[];
+  total: number;
+  endDate?: string;
+  createdAt: string;
+  status?: string;
 }
 
-// EDIT YOUR SERVICES HERE - Add, remove, or modify services
-const DEFAULT_SERVICES: Service[] = [
-  {
-    id: 1,
-    name: 'Oil Change',
-    price: 'Rs 49.99',
-    description: 'Complete oil and filter change',
-    category: 'Maintenance'
-  },
-  {
-    id: 2,
-    name: 'Tire Rotation',
-    price: 'Rs 29.99',
-    description: 'Rotate all four tires for even wear',
-    category: 'Maintenance'
-  },
-  {
-    id: 3,
-    name: 'Brake Inspection',
-    price: 'Rs 39.99',
-    description: 'Complete brake system check',
-    category: 'Safety'
-  },
-  {
-    id: 4,
-    name: 'Battery Check',
-    price: 'Rs 19.99',
-    description: 'Battery health and charging test',
-    category: 'Maintenance'
-  },
-  {
-    id: 5,
-    name: 'Air Filter Replacement',
-    price: 'Rs 34.99',
-    description: 'Replace engine air filter',
-    category: 'Maintenance'
-  },
-  {
-    id: 6,
-    name: 'Wheel Alignment',
-    price: 'Rs 79.99',
-    description: 'Four-wheel alignment service',
-    category: 'Maintenance'
-  },
-  {
-    id: 7,
-    name: 'Transmission Service',
-    price: 'Rs 129.99',
-    description: 'Transmission fluid change and inspection',
-    category: 'Major Service'
-  },
-  {
-    id: 8,
-    name: 'Full Vehicle Inspection',
-    price: 'Rs 89.99',
-    description: 'Comprehensive vehicle health check',
-    category: 'Inspection'
-  },
-  {
-    id: 9,
-    name: 'Coolant Flush',
-    price: 'Rs 69.99',
-    description: 'Complete cooling system flush',
-    category: 'Maintenance'
-  },
-  {
-    id: 10,
-    name: 'Wiper Blade Replacement',
-    price: 'Rs 24.99',
-    description: 'Replace front wiper blades',
-    category: 'Maintenance'
-  },
-];
-
-// ✏️ CUSTOMIZE PAGE SETTINGS
 const PAGE_CONFIG = {
   title: 'Default Vehicle Services',
   subtitle: 'Select the services you need for your vehicle',
@@ -95,109 +25,192 @@ const PAGE_CONFIG = {
   headerIcon: 'bg-[#3a3a3a]',
   titleColor: 'text-red-500',
   primaryColor: 'red',
-  showCategory: false, // Set to true to show categories
+  showCategory: false,
   bookingButtonText: 'Book Now',
-  enableMultiSelect: true, // Set to false to allow only one selection
+  enableMultiSelect: true,
   darkMode: true,
 };
 
-
-interface ServicePageProps {
-  services?: Service[];
-  // onBooking receives selected ids, selected service objects and optional endDate (yyyy-mm-dd)
-  onBooking?: (selectedServiceIds: number[], services: Service[], endDate?: string) => void;
-  config?: Partial<typeof PAGE_CONFIG>;
-}
-
-const ServicePage: React.FC<ServicePageProps> = ({ 
-  services = DEFAULT_SERVICES, 
-  onBooking,
-  config = PAGE_CONFIG 
-}) => {
+const ServicePage: React.FC = () => {
+  const { user } = useAuth();
+  const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const [serviceMode, setServiceMode] = useState<'full' | 'half' | 'custom'>('custom');
-  const [prevCustomSelection, setPrevCustomSelection] = useState<number[]>([]);
-
-  const FULL_SERVICE_IDS = services.slice(0, 6).map(s => s.id);
-  const HALF_SERVICE_IDS = services.slice(0, 4).map(s => s.id);
-  
-  interface Booking {
-    id: number;
-    name: string;
-    services: Service[];
-    total: string;
-    description?: string;
-    endDate?: string;
-    status?: 'pending' | 'in-progress' | 'completed';
-    createdAt: string;
-  }
-
   const [bookings, setBookings] = useState<Booking[]>([]);
-  
-  // Merge custom config with defaults
-  const pageConfig = { ...PAGE_CONFIG, ...config };
+  const [loading, setLoading] = useState<boolean>(true);
+  const [bookingsLoading, setBookingsLoading] = useState<boolean>(true);
 
-  const toggleService = (serviceId: number): void => {
-    if (pageConfig.enableMultiSelect) {
-      // Multi-select mode
-      if (selectedServices.includes(serviceId)) {
-        setSelectedServices(selectedServices.filter(id => id !== serviceId));
-      } else {
-        setSelectedServices([...selectedServices, serviceId]);
+  const activeServices = services.filter(s => s.status === 'Active');
+  const FULL_SERVICE_IDS = activeServices.slice(0, 6).map(s => s.serviceID);
+  const HALF_SERVICE_IDS = activeServices.slice(0, 4).map(s => s.serviceID);
+
+  // Fetch services from API
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const data = await getServices();
+        const mapped: Service[] = data.map(s => ({
+          serviceID: s.serviceID,
+          name: s.title,
+          price: s.price.toString(),
+          description: s.description,
+          code: s.code,
+          duration: s.duration,
+          status: s.status,
+        }));
+        setServices(mapped);
+      } catch (err) {
+        console.error('Error fetching services:', err);
+      } finally {
+        setLoading(false);
       }
+    };
+    fetchServices();
+  }, []);
+
+  // Fetch existing appointments/bookings from backend
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!user?.customerID || services.length === 0) {
+        setBookingsLoading(false);
+        return;
+      }
+
+      try {
+        const appointments = await getCustomerAppointments(user.customerID);
+        
+        // Filter for Service-type appointments and map to Booking format
+        const serviceAppointments = appointments.filter(
+          (apt: Appointment) => apt.appointmentType === 'Service'
+        );
+
+        const mappedBookings: Booking[] = serviceAppointments.map((apt: Appointment) => {
+          // Get service details for this appointment
+          const appointmentServices = apt.customServiceIDs?.map(serviceId => {
+            const service = services.find(s => s.serviceID === serviceId);
+            return service || {
+              serviceID: serviceId,
+              name: 'Unknown Service',
+              price: '0',
+              description: '',
+              code: '',
+              duration: 0,
+              status: 'Active'
+            };
+          }) || [];
+
+          return {
+            id: apt.appointmentID,
+            services: appointmentServices,
+            total: apt.totalPrice || 0,
+            endDate: apt.endDate ? apt.endDate.split('T')[0] : undefined,
+            createdAt: apt.startDate,
+            status: apt.status,
+          };
+        });
+
+        setBookings(mappedBookings);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        setBookingsLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [user?.customerID, services]);
+
+  const toggleService = (serviceId: number) => {
+    if (PAGE_CONFIG.enableMultiSelect) {
+      setSelectedServices(prev =>
+        prev.includes(serviceId)
+          ? prev.filter(id => id !== serviceId)
+          : [...prev, serviceId]
+      );
     } else {
-      // Single-select mode
       setSelectedServices([serviceId]);
     }
   };
 
-  const getTotalCost = (): string => {
-    return selectedServices.reduce((total, serviceId) => {
-      const service = services.find(s => s.id === serviceId);
-      const raw = (service?.price || '0').toString();
-      const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
-      return total + (isNaN(num) ? 0 : num);
-    }, 0).toFixed(2);
+  const getTotalCost = (): number => {
+    return selectedServices.reduce((sum, id) => {
+      const service = services.find(s => s.serviceID === id);
+      if (!service) return sum;
+      const priceNum =
+        typeof service.price === 'string'
+          ? parseFloat(service.price.replace(/[^0-9.]/g, '')) || 0
+          : service.price;
+      return sum + priceNum;
+    }, 0);
   };
 
-  const handleBooking = (endDate?: string): void => {
+  const handleBooking = async (endDate?: string) => {
     if (selectedServices.length === 0) {
-      alert('Please select at least one service');
+      alert('Select at least one service.');
       return;
     }
 
-    const selectedServiceObjects = services.filter(s => 
-      selectedServices.includes(s.id)
-    );
-
-    // If custom onBooking handler provided, use it
-    if (onBooking) {
-      onBooking(selectedServices, selectedServiceObjects, endDate);
-    } else {
-      // Default behavior
-    alert(`Booking confirmed for ${selectedServices.length} service(s)!\nTotal: Rs ${getTotalCost()}${endDate ? `\nDesired completion: ${endDate}` : ''}`);
+    if (!user?.customerID) {
+      alert('Please log in to make a booking.');
+      return;
     }
 
-    // create a booking record so user can see it on the page
-    const newBooking: Booking = {
-      id: Date.now(),
-      name: `Service Booking - ${new Date().toLocaleString()}`,
-      services: selectedServiceObjects,
-      total: getTotalCost(),
-      description: selectedServiceObjects.map(s => s.name).join(', '),
-      endDate,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
+    const now = new Date();
+    const startDateTime = now.toISOString();
+    const timeOnly = now.toTimeString().split(' ')[0];
+    
+    const endDateTime = endDate 
+      ? new Date(endDate + 'T23:59:59').toISOString() 
+      : undefined;
+
+    const dto: AppointmentDto = {
+      CustomerID: user.customerID,
+      VehicleID: user.vehicleID ? Number(user.vehicleID) : null,
+      StartDate: startDateTime,
+      Time: timeOnly,
+      AppointmentType: 'Service',
+      ServiceOption: 'Custom',
+      CustomServiceIDs: selectedServices,
+      EndDate: endDateTime,
     };
 
-    setBookings(prev => [...prev, newBooking]);
+    try {
+      console.log('Sending booking DTO:', dto);
+      const result = await createAppointment(dto);
+      console.log('Booking created:', result);
 
-    // clear selection and switch to custom mode
-    setSelectedServices([]);
-    setServiceMode('custom');
+      const selectedObjects = services.filter(s =>
+        selectedServices.includes(s.serviceID)
+      );
+
+      // Add new booking to state
+      const newBooking: Booking = {
+        id: result.appointmentID,
+        services: selectedObjects,
+        total: result.totalPrice || getTotalCost(),
+        endDate: endDate,
+        createdAt: result.startDate,
+        status: result.status,
+      };
+
+      setBookings(prev => [newBooking, ...prev]);
+      setSelectedServices([]);
+      setServiceMode('custom');
+      alert('Booking successful!');
+    } catch (err: any) {
+      console.error('Error creating booking:', err);
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      const errorMessage = err.response?.data || 'Error creating booking. Check console for details.';
+      alert(errorMessage);
+    }
   };
 
-  const dark = !!pageConfig.darkMode;
+  const dark = PAGE_CONFIG.darkMode;
+
+  if (loading) return <div className="p-8 text-center text-gray-300">Loading services...</div>;
 
   return (
     <div className={`min-h-screen py-8 ${dark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
@@ -205,137 +218,172 @@ const ServicePage: React.FC<ServicePageProps> = ({
         <div className="flex gap-6">
           <Sidebar role="customer" />
           <div className="flex-1">
-        {/* Header */}
-
-        {/* Header */}
-  <div className={`${dark ? pageConfig.headerBg : 'bg-white'} p-6 mb-8 rounded-lg shadow-md`}>
-          <div className="flex items-center mb-2 space-x-3">
-            <div className={`${pageConfig.headerIcon} p-3 rounded-full`}>
-              <Wrench className={`w-8 h-8 ${dark ? 'text-red-500' : `text-${pageConfig.primaryColor}-600`}`} />
-            </div>
-            <h1 className={`text-3xl font-bold ${dark ? pageConfig.titleColor : 'text-gray-800'}`}>{pageConfig.title}</h1>
-          </div>
-          <p className={`${dark ? 'text-gray-300 ml-14' : 'text-gray-600 ml-14'}`}>{pageConfig.subtitle}</p>
-        </div>
-
-        {/* Service mode buttons: Full / Half / Custom */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => {
-              if (serviceMode !== 'full') {
-                setPrevCustomSelection(selectedServices);
-                setSelectedServices(FULL_SERVICE_IDS);
-                setServiceMode('full');
-              }
-            }}
-            className={`px-4 py-2 rounded-lg font-semibold ${serviceMode === 'full' ? 'bg-red-600 text-white' : (dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700')} border`}
-          >
-            Full Service
-          </button>
-
-          <button
-            onClick={() => {
-              if (serviceMode !== 'half') {
-                setPrevCustomSelection(selectedServices);
-                setSelectedServices(HALF_SERVICE_IDS);
-                setServiceMode('half');
-              }
-            }}
-            className={`px-4 py-2 rounded-lg font-semibold ${serviceMode === 'half' ? 'bg-red-600 text-white' : (dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700')} border`}
-          >
-            Half Service
-          </button>
-
-          <button
-            onClick={() => {
-              if (serviceMode !== 'custom') {
-                setSelectedServices(prevCustomSelection);
-                setServiceMode('custom');
-              }
-            }}
-            className={`px-4 py-2 rounded-lg font-semibold ${serviceMode === 'custom' ? 'bg-red-600 text-white' : (dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700')} border`}
-          >
-            Custom Service
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Services List */}
-          <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {services.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  selected={selectedServices.includes(service.id)}
-                  onToggle={toggleService}
-                  disabled={serviceMode !== 'custom'}
-                  showCategory={pageConfig.showCategory}
-                  primaryColor={pageConfig.primaryColor}
-                  dark={dark}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <BookingSummary
-              selectedServiceIds={selectedServices}
-              services={services}
-              onBook={handleBooking}
-              primaryColor={pageConfig.primaryColor}
-              dark={dark}
-              bookingButtonText={pageConfig.bookingButtonText}
-              requireCompletionDate={true}
-            />
-          </div>
-        </div>
-
-        {/* Bookings section (shows bookings created from this page) */}
-        <div className="mt-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-200">Your Bookings</h2>
-            {bookings.length > 0 && (
-              <span className="text-gray-400">
-                {bookings.length} booking{bookings.length !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-
-          {bookings.length === 0 ? (
-            <div className="p-8 text-center bg-[#2a2a2a] rounded-lg shadow-md">
-              <p className="text-lg text-gray-400">No bookings yet</p>
-              <p className="text-gray-500">Select services and click "{pageConfig.bookingButtonText}" to create a booking</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {bookings.map((b) => (
-                <div key={b.id} className={`${dark ? 'bg-[#2a2a2a]' : 'bg-white'} p-6 rounded-lg shadow-md`}> 
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className={`text-lg font-bold ${dark ? 'text-gray-200' : 'text-gray-800'}`}>{b.name}</h3>
-                      {b.endDate && (
-                        <p className={`mt-1 text-sm ${dark ? 'text-gray-400' : 'text-gray-500'}`}>Desired completion: {new Date(b.endDate).toLocaleDateString()}</p>
-                      )}
-                      <p className={`mt-2 text-sm ${dark ? 'text-gray-300' : 'text-gray-600'}`}>{b.description}</p>
-                    </div>
-                    <div className="flex flex-col items-end ml-4 space-y-2">
-                      <button
-                        onClick={() => setBookings(prev => prev.filter(x => x.id !== b.id))}
-                        className={`text-red-400 hover:text-red-500`}
-                        title="Delete booking"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                      <span className={`text-xl font-bold ${pageConfig.primaryColor === 'red' ? 'text-red-400' : `text-${pageConfig.primaryColor}-400`}`}>{`Rs ${b.total}`}</span>
-                    </div>
-                  </div>
+            {/* Header */}
+            <div className={`${dark ? PAGE_CONFIG.headerBg : 'bg-white'} p-6 mb-8 rounded-lg shadow-md`}>
+              <div className="flex items-center mb-2 space-x-3">
+                <div className={`${PAGE_CONFIG.headerIcon} p-3 rounded-full`}>
+                  <Wrench className={`w-8 h-8 ${dark ? 'text-red-500' : 'text-red-600'}`} />
                 </div>
-              ))}
+                <h1 className={`text-3xl font-bold ${dark ? PAGE_CONFIG.titleColor : 'text-gray-800'}`}>
+                  {PAGE_CONFIG.title}
+                </h1>
+              </div>
+              <p className={`${dark ? 'text-gray-300 ml-14' : 'text-gray-600 ml-14'}`}>
+                {PAGE_CONFIG.subtitle}
+              </p>
             </div>
-          )}
-        </div>
+
+            {/* Service mode buttons */}
+            <div className="flex items-center gap-3 mb-6">
+              <button
+                onClick={() => {
+                  setSelectedServices(FULL_SERVICE_IDS);
+                  setServiceMode('full');
+                }}
+                className={`px-4 py-2 rounded-lg font-semibold ${
+                  serviceMode === 'full' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+                } border`}
+              >
+                Full Service
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedServices(HALF_SERVICE_IDS);
+                  setServiceMode('half');
+                }}
+                className={`px-4 py-2 rounded-lg font-semibold ${
+                  serviceMode === 'half' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+                } border`}
+              >
+                Half Service
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedServices([]);
+                  setServiceMode('custom');
+                }}
+                className={`px-4 py-2 rounded-lg font-semibold ${
+                  serviceMode === 'custom' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+                } border`}
+              >
+                Custom Service
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              {/* Service list */}
+              <div className="lg:col-span-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {activeServices.map(service => (
+                    <ServiceCard
+                      key={service.serviceID}
+                      service={{
+                        id: service.serviceID,
+                        name: service.name,
+                        description: service.description,
+                        price: service.price,
+                        category: service.category,
+                      }}
+                      selected={selectedServices.includes(service.serviceID)}
+                      onToggle={toggleService}
+                      disabled={serviceMode !== 'custom'}
+                      showCategory={PAGE_CONFIG.showCategory}
+                      primaryColor={PAGE_CONFIG.primaryColor}
+                      dark={dark}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Booking summary */}
+              <div className="lg:col-span-1">
+                <BookingSummary
+                  selectedServiceIds={selectedServices}
+                  services={services.map(s => ({
+                    id: s.serviceID,
+                    name: s.name,
+                    price: s.price,
+                    description: s.description,
+                  }))}
+                  onBook={handleBooking}
+                  primaryColor={PAGE_CONFIG.primaryColor}
+                  dark={dark}
+                  bookingButtonText={PAGE_CONFIG.bookingButtonText}
+                  requireCompletionDate={true}
+                />
+              </div>
+            </div>
+
+            {/* Bookings display */}
+            <div className="mt-10">
+              <h2 className="mb-4 text-2xl font-bold text-gray-200">Your Bookings</h2>
+              
+              {bookingsLoading ? (
+                <div className="p-8 text-center">
+                  <div className="w-12 h-12 mx-auto mb-4 border-4 border-red-500 rounded-full animate-spin border-t-transparent"></div>
+                  <p className="text-gray-400">Loading your bookings...</p>
+                </div>
+              ) : bookings.length === 0 ? (
+                <p className="text-gray-400">No bookings yet</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {bookings.map(b => (
+                    <div key={b.id} className={`${dark ? 'bg-[#2a2a2a]' : 'bg-white'} p-6 rounded-lg shadow-md`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-lg font-bold text-gray-200">
+                              Booking #{b.id}
+                            </h3>
+                            {b.status && (
+                              <span className={`px-2 py-1 text-xs rounded ${
+                                b.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                b.status === 'Confirmed' ? 'bg-blue-500/20 text-blue-400' :
+                                b.status === 'In Progress' ? 'bg-purple-500/20 text-purple-400' :
+                                b.status === 'Completed' ? 'bg-green-500/20 text-green-400' :
+                                'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {b.status}
+                              </span>
+                            )}
+                          </div>
+                          <p className="mb-2 text-sm text-gray-400">
+                            {new Date(b.createdAt).toLocaleDateString()}
+                          </p>
+                          {b.endDate && (
+                            <p className="mb-2 text-sm text-gray-400">
+                              Completion: {b.endDate}
+                            </p>
+                          )}
+                          <div className="mb-3">
+                            <p className="mb-1 text-xs font-semibold text-gray-500">Services:</p>
+                            {b.services.length > 0 ? (
+                              <ul className="space-y-1">
+                                {b.services.map((service, idx) => (
+                                  <li key={idx} className="text-sm text-gray-300">
+                                    • {service.name}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-sm text-gray-500">No services listed</p>
+                            )}
+                          </div>
+                          <div className="pt-3 mt-3 border-t border-gray-700">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-gray-400">Total:</span>
+                              <span className="text-xl font-bold text-red-400">
+                                Rs {typeof b.total === 'number' ? b.total.toFixed(2) : b.total}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

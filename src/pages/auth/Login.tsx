@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"customer" | "employee">("customer");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -16,15 +17,30 @@ export default function Login() {
         password,
       });
 
-      // Save tokens
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-      localStorage.setItem("role", res.data.role);
+      console.log('Login response:', res.data); // ✅ Debug
 
-      // Navigate based on backend role
+      const userData = {
+        userId: res.data.userId,
+        customerID: res.data.customerID,  // ✅ Now returned from backend
+        employeeID: res.data.employeeID,  // ✅ Now returned from backend
+        vehicleID: res.data.vehicleID,    // ✅ Now returned from backend
+        role: res.data.role,
+        email: res.data.email,
+      };
+
+      console.log('🔍 Full Login Response:', res.data)
+      
+      const tokens = {
+        accessToken: res.data.accessToken,
+        refreshToken: res.data.refreshToken,
+      };
+
+      login(userData, tokens);
+
       if (res.data.role === "customer") navigate("/customer/dashboard");
       else navigate("/employee/dashboard");
     } catch (err: any) {
+      console.error('Login error:', err);
       setError("Invalid email or password");
     }
   };
@@ -32,7 +48,7 @@ export default function Login() {
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-[#1a1a1a]">
       <div className="bg-[#2a2a2a] p-10 rounded-xl shadow-md w-96">
-        <h1 className="text-2xl font-bold text-red-500 mb-6">Login</h1>
+        <h1 className="mb-6 text-2xl font-bold text-red-500">Login</h1>
 
         <input
           type="text"
@@ -48,22 +64,12 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
         />
-        <select
-          className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
-          value={role}
-          onChange={(e) =>
-            setRole(e.target.value as "customer" | "employee")
-          }
-        >
-          <option value="customer">Customer</option>
-          <option value="employee">Employee</option>
-        </select>
 
-        {error && <p className="text-red-500 mb-3">{error}</p>}
+        {error && <p className="mb-3 text-red-500">{error}</p>}
 
         <button
           onClick={handleLogin}
-          className="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg font-medium text-white"
+          className="w-full py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
         >
           Login
         </button>

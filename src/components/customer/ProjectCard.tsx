@@ -22,7 +22,7 @@ interface Props {
   dark?: boolean;
 }
 
-const ProjectCard: React.FC<Props> = ({ service, onEdit, onDelete, showStatus = false, showCreatedDate = false, primaryColor = 'red', dark = false }) => {
+const ProjectCard: React.FC<Props> = ({ service, onEdit, onDelete, showStatus = false, showCreatedDate = false, dark = false }) => {
   const titleColor = dark ? 'text-gray-200' : 'text-gray-800';
   const descColor = dark ? 'text-gray-300' : 'text-gray-600';
   const metaColor = dark ? 'text-gray-400' : 'text-gray-500';
@@ -63,9 +63,6 @@ const ProjectCard: React.FC<Props> = ({ service, onEdit, onDelete, showStatus = 
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-3 border-t border-gray-700">
-        <span className={`text-xl font-bold text-${primaryColor}-400`}>{service.price}</span>
-      </div>
       
       <button
         onClick={() => generateProjectReport(service)}

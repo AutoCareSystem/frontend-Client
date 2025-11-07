@@ -10,18 +10,18 @@ export default function Modifications() {
   const [completionDate, setCompletionDate] = useState<string | undefined>(undefined);
   const [touched, setTouched] = useState(false);
 
-  const requestModification = () => {
-    setTouched(true);
-    if (!completionDate) {
-      alert('Please enter a desired completion date before requesting a modification');
-      return;
-    }
+  // const requestModification = () => {
+  //   setTouched(true);
+  //   if (!completionDate) {
+  //     alert('Please enter a desired completion date before requesting a modification');
+  //     return;
+  //   }
 
-    alert(`Modification requested. Desired completion: ${completionDate}`);
-    // reset
-    setCompletionDate(undefined);
-    setTouched(false);
-  };
+  //   alert(`Modification requested. Desired completion: ${completionDate}`);
+  //   // reset
+  //   setCompletionDate(undefined);
+  //   setTouched(false);
+  // };
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
@@ -50,7 +50,7 @@ export default function Modifications() {
             <p className="text-sm text-red-400 mb-3">Completion date is required.</p>
           )}
           <div className="flex items-center gap-3">
-            <button onClick={requestModification} className="px-4 py-2 bg-red-600 rounded text-white font-semibold">Request Modification</button>
+            {/* <button onClick={requestModification} className="px-4 py-2 bg-red-600 rounded text-white font-semibold">Request Modification</button> */}
             <button onClick={() => { setCompletionDate(undefined); setTouched(false); }} className="px-4 py-2 bg-gray-700 rounded text-gray-200">Reset</button>
           </div>
         </div>

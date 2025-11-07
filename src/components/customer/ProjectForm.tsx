@@ -3,7 +3,7 @@ import { Check, X } from 'lucide-react';
 
 interface FormData {
   name: string;
-  price: string;
+  //price: string;
   description: string;
   endDate?: string;
 }
@@ -33,10 +33,10 @@ const ProjectForm: React.FC<Props> = ({ formData, onChange, onSubmit, onCancel, 
           <label className={`${labelColor} block mb-2 font-medium`}>Service Name <span className="text-red-500">*</span></label>
           <input name="name" value={formData.name} onChange={onChange} placeholder="e.g., Custom Paint Job" className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
         </div>
-        <div>
+        {/*<div>
           <label className={`${labelColor} block mb-2 font-medium`}>Price <span className="text-red-500">*</span></label>
           <input name="price" value={formData.price} onChange={onChange} placeholder="e.g., 499.99" className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
-        </div>
+        </div>*/}
         <div>
           <label className={`${labelColor} block mb-2 font-medium`}>Description</label>
           <input name="description" value={formData.description} onChange={onChange} placeholder="Brief description" className={`w-full px-4 py-2 ${inputText} ${inputBg} border border-gray-600 rounded-lg focus:outline-none`} />
