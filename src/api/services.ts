@@ -6,9 +6,25 @@ export type ServiceDto = {
   duration?: number;
   price?: number;
   status?: string;
+  createdByDisplay?: string;
 };
 
 import axios from 'axios';
+
+const toString = (v: any) => {
+  if (v == null) return undefined;
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (typeof v === 'object') {
+    if (v.normalizedUserName) return v.normalizedUserName;
+    if (v.userName) return v.userName;
+    if (v.fullName) return v.fullName;
+    const maybe = `${v.firstName ?? ''} ${v.lastName ?? ''}`.trim();
+    if (maybe) return maybe;
+    try { return JSON.stringify(v); } catch { return String(v); }
+  }
+  return String(v);
+};
 
 /**
  * Fetch services from backend API. This function will throw if the request fails
@@ -27,6 +43,7 @@ export async function fetchServices(): Promise<ServiceDto[]> {
     duration: s.duration,
     price: s.price,
     status: s.status,
+    createdByDisplay: toString(s.createdBy ?? s.user ?? s.owner ?? s.createdByUser ?? s.creator),
   }));
 }
 
@@ -55,6 +72,7 @@ export async function createService(payload: ServiceDto): Promise<ServiceDto> {
     duration: s.duration,
     price: s.price,
     status: s.status,
+    createdByDisplay: toString(s.createdBy ?? s.user ?? s.owner ?? s.createdByUser ?? s.creator),
   };
 }
 

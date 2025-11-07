@@ -13,6 +13,14 @@ export type AppointmentServiceDto = {
   packageType?: string | null;
   packageServices?: Array<{ title?: string; price?: number }>;
   customServices?: Array<{ title?: string; price?: number }>;
+  raw?: any;
+};
+
+const sanitize = (v: any) => {
+  if (v == null) return undefined;
+  const s = String(v).trim();
+  if (s === '' || s.toLowerCase() === 'string' || s === 'null') return undefined;
+  return s;
 };
 
 const MOCK_APPOINTMENT_SERVICES: AppointmentServiceDto[] = [
@@ -88,24 +96,33 @@ export async function fetchAppointmentServices(): Promise<AppointmentServiceDto[
     if (res && Array.isArray(res.data)) {
       return res.data.map((s: any) => ({
         appointmentID: s.appointmentID ?? s.appointmentId ?? s.id,
-        customerName: s.customerName,
-        customerEmail: s.customerEmail,
-        vehicleInfo: s.vehicleInfo,
+        customerName: sanitize(s.customerName) ?? sanitize(s.customer?.user?.normalizedUserName) ?? sanitize(s.customer?.user?.userName) ?? undefined,
+        customerEmail: sanitize(s.customerEmail) ?? sanitize(s.customer?.user?.email) ?? undefined,
+        vehicleInfo: sanitize(s.vehicleInfo) ?? (() => {
+          const v = s.vehicle ?? s.vehicleInfo ?? s.vehicleDetails;
+          if (!v) return undefined;
+          const plate = sanitize(v.plateNumber) ?? sanitize(v.plate) ?? '';
+          const model = sanitize(v.model) ?? '';
+          const year = sanitize(v.year) ?? '';
+          const parts = [model, year].filter(Boolean).join(' ');
+          return [plate ? `${plate}` : undefined, parts ? `• ${parts}` : undefined].filter(Boolean).join(' - ');
+        })(),
         startDate: s.startDate,
         time: s.time,
-        status: s.status,
-        employeeName: s.employeeName,
-        serviceOption: s.serviceOption,
+        status: sanitize(s.status) ?? undefined,
+        employeeName: sanitize(s.employeeName) ?? sanitize(s.employee?.user?.userName) ?? undefined,
+        serviceOption: sanitize(s.serviceOption) ?? undefined,
         totalPrice: s.totalPrice,
-        packageName: s.packageName ?? null,
-        packageType: s.packageType ?? null,
-        packageServices: Array.isArray(s.packageServices) ? s.packageServices.map((ps: any) => ({ title: ps.title, price: ps.price })) : [],
-        customServices: Array.isArray(s.customServices) ? s.customServices.map((cs: any) => ({ title: cs.title, price: cs.price })) : [],
+        packageName: sanitize(s.packageName) ?? null,
+        packageType: sanitize(s.packageType) ?? null,
+        packageServices: Array.isArray(s.packageServices) ? s.packageServices.map((ps: any) => ({ title: sanitize(ps.title) ?? sanitize(ps.service?.title), price: ps.price })) : [],
+        customServices: Array.isArray(s.customServices) ? s.customServices.map((cs: any) => ({ title: sanitize(cs.title) ?? sanitize(cs.service?.title), price: cs.price })) : [],
+        raw: s,
       }));
     }
   } catch (err: any) {
     console.warn('fetchAppointmentServices: backend request failed, using mock data', err?.message || err);
   }
 
-  return Promise.resolve(MOCK_APPOINTMENT_SERVICES.map(a => ({ ...a })));
+  return Promise.resolve(MOCK_APPOINTMENT_SERVICES.map(a => ({ ...a, raw: a })));
 }

@@ -35,7 +35,14 @@ export async function fetchProjects(): Promise<ProjectDto[]> {
   if (!res || !Array.isArray(res.data)) throw new Error('Invalid response from projects API');
 
   return res.data.map((p: any) => {
-    const customerDisplay = toString(p.customer?.user?.userName ?? p.customer?.userName ?? p.customer?.customerName ?? p.customer?.user?.fullName ?? p.customer?.customerFullName);
+    const customerDisplay = toString(
+      p.customer?.user?.normalizedUserName ??
+        p.customer?.user?.userName ??
+        p.customer?.user?.fullName ??
+        p.customer?.userName ??
+        p.customer?.customerName ??
+        p.customer?.customerFullName
+    );
     const vehiclePlate = toString(p.vehicle?.plateNumber ?? p.vehicle?.plate ?? p.vehicle?.plateNo);
     const projectTitle = toString(p.projectDetails?.projectTitle ?? p.projectDetails?.title ?? p.projectTitle ?? p.title);
     const projectDescription = toString(p.projectDetails?.projectDescription ?? p.projectDetails?.description ?? p.projectDescription ?? p.description);

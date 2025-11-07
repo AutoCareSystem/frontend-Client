@@ -145,40 +145,41 @@ export default function Services() {
           {filteredAppointments.length > 0 && (
             <div className="space-y-3">
               {filteredAppointments.map(a => (
-                <div key={a.appointmentID} className="bg-[#2a2a2a] p-4 rounded border border-gray-700">
-                  <div className="flex justify-between">
-                    <div>
-                      <div className="font-semibold">{a.customerName}</div>
-                      <div className="text-sm text-gray-400">{a.customerEmail} • {a.vehicleInfo}</div>
-                      <div className="text-sm text-gray-400">{a.startDate ? new Date(a.startDate).toLocaleString() : a.time}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm">Status: <span className="font-medium">{a.status}</span></div>
-                      <div className="text-red-500 font-bold">{formatPrice(a.totalPrice)}</div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    {a.packageName && <div className="text-sm">Package: {a.packageName} ({a.packageType})</div>}
-                    {a.packageServices && a.packageServices.length > 0 && (
-                      <ul className="text-sm mt-1 list-disc list-inside text-gray-300">
-                        {a.packageServices.map((ps, i) => (<li key={i}>{ps.title} — {formatPrice(ps.price)}</li>))}
-                      </ul>
-                    )}
-                    {a.customServices && a.customServices.length > 0 && (
-                      <div className="mt-1 text-sm text-gray-300">Custom services:
-                        <ul className="list-disc list-inside">
-                          {a.customServices.map((cs, i) => (<li key={i}>{cs.title} — {formatPrice(cs.price)}</li>))}
-                        </ul>
+                <div key={a.appointmentID}>
+                  <div className="bg-[#2a2a2a] p-4 rounded border border-gray-700">
+                    <div className="flex justify-between">
+                      <div>
+                        <div className="font-semibold">{a.customerName}</div>
+                        <div className="text-sm text-gray-400">{a.customerEmail} • {a.vehicleInfo}</div>
+                        <div className="text-sm text-gray-400">{a.startDate ? new Date(a.startDate).toLocaleString() : a.time}</div>
                       </div>
-                    )}
+                      <div className="text-right">
+                        <div className="text-sm">Status: <span className="font-medium">{a.status}</span></div>
+                        <div className="text-red-500 font-bold">{formatPrice(a.totalPrice)}</div>
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      {a.packageName && <div className="text-sm">Package: {a.packageName} ({a.packageType})</div>}
+                      {a.packageServices && a.packageServices.length > 0 && (
+                        <ul className="text-sm mt-1 list-disc list-inside text-gray-300">
+                          {a.packageServices.map((ps, i) => (<li key={i}>{ps.title} — {formatPrice(ps.price)}</li>))}
+                        </ul>
+                      )}
+                      {a.customServices && a.customServices.length > 0 && (
+                        <div className="mt-1 text-sm text-gray-300">Custom services:
+                          <ul className="list-disc list-inside">
+                            {a.customServices.map((cs, i) => (<li key={i}>{cs.title} — {formatPrice(cs.price)}</li>))}
+                          </ul>
+                        </div>
+                      )}
+                      <div className="mt-3 flex gap-2">
+                        <button onClick={() => setSelectedAppointment(a)} className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded">View</button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {selectedAppointment && (
+                  {/* Inline expanded details under the clicked row */}
+                    {selectedAppointment && selectedAppointment.appointmentID === a.appointmentID && (
           <div className="mt-6 bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
             <div className="flex justify-between items-start">
               <div>
@@ -213,6 +214,14 @@ export default function Services() {
             </div>
           </div>
         )}
+                  
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+       
       </main>
     </div>
   );
