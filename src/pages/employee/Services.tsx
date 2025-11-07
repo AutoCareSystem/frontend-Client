@@ -1,6 +1,6 @@
 import Sidebar from "../../components/Sidebar";
 import { useMemo, useState, useEffect } from "react";
-import { fetchServices } from "../../api/services";
+import { fetchServices, deleteService, updateService } from "../../api/services";
 import type { ServiceDto } from "../../api/services";
 import { fetchAppointmentServices } from "../../api/appointmentServices";
 import type { AppointmentServiceDto } from "../../api/appointmentServices";
@@ -16,6 +16,10 @@ export default function Services() {
   const [loadingAppointmentServices, setLoadingAppointmentServices] = useState(false);
   const [appointmentServicesError, setAppointmentServicesError] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentServiceDto | null>(null);
+  const [deletingServiceId, setDeletingServiceId] = useState<number | null>(null);
+  const [editingServiceId, setEditingServiceId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<Partial<ServiceDto>>({});
+  const [savingServiceId, setSavingServiceId] = useState<number | null>(null);
   const [query, setQuery] = useState<string>("");
   const [apptStatusFilter, setApptStatusFilter] = useState<string>("All");
   const [apptOptionFilter, setApptOptionFilter] = useState<string>("All");
@@ -118,8 +122,103 @@ export default function Services() {
                       <div className="text-red-500 font-bold">{typeof c.price === 'number' ? `$${c.price.toFixed(2)}` : '—'}</div>
                     </div>
                   </div>
+                    <div className="mt-3 flex gap-2 justify-end">
+                    <button
+                      onClick={() => {
+                        if (!c.serviceID) return;
+                        setEditingServiceId(c.serviceID ?? null);
+                        setEditForm({
+                          code: c.code,
+                          title: c.title,
+                          description: c.description,
+                          duration: c.duration,
+                          price: c.price,
+                          status: c.status,
+                        });
+                      }}
+                      className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      disabled={deletingServiceId === c.serviceID}
+                      onClick={async () => {
+                        if (!c.serviceID) return;
+                        const ok = window.confirm(`Delete service "${c.title}"? This action cannot be undone.`);
+                        if (!ok) return;
+                        try {
+                          setDeletingServiceId(c.serviceID ?? null);
+                          await deleteService(c.serviceID);
+                          setCatalog(prev => prev ? prev.filter(s => s.serviceID !== c.serviceID) : prev);
+                        } catch (err: any) {
+                          alert('Failed to delete service: ' + (err?.message || String(err)));
+                        } finally {
+                          setDeletingServiceId(null);
+                        }
+                      }}
+                      className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"
+                    >
+                      {deletingServiceId === c.serviceID ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
+                  
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Edit dialog modal */}
+          {editingServiceId != null && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+              <div className="w-full max-w-2xl bg-[#0b0c0d]/90 p-6 rounded-2xl border border-gray-800">
+                <h3 className="text-lg font-semibold mb-3">Edit Service</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-400">Code</label>
+                    <input value={editForm.code ?? ''} onChange={e => setEditForm(f => ({ ...f, code: e.target.value }))} className="w-full mt-1 p-2 bg-[#1a1a1a] rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400">Title</label>
+                    <input value={editForm.title ?? ''} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} className="w-full mt-1 p-2 bg-[#1a1a1a] rounded text-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-gray-400">Description</label>
+                    <textarea value={editForm.description ?? ''} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="w-full mt-1 p-2 bg-[#1a1a1a] rounded text-sm" rows={4} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400">Duration (min)</label>
+                    <input type="number" value={editForm.duration ?? ''} onChange={e => setEditForm(f => ({ ...f, duration: e.target.value === '' ? undefined : Number(e.target.value) }))} className="w-full mt-1 p-2 bg-[#1a1a1a] rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400">Price</label>
+                    <input type="number" value={editForm.price ?? ''} onChange={e => setEditForm(f => ({ ...f, price: e.target.value === '' ? undefined : Number(e.target.value) }))} className="w-full mt-1 p-2 bg-[#1a1a1a] rounded text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400">Status</label>
+                    <select value={editForm.status ?? ''} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))} className="w-full mt-1 p-2 bg-[#1a1a1a] rounded text-sm">
+                      <option value="">(unchanged)</option>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex justify-end gap-2">
+                  <button onClick={() => setEditingServiceId(null)} className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded">Cancel</button>
+                  <button disabled={savingServiceId === editingServiceId} onClick={async () => {
+                    try {
+                      setSavingServiceId(editingServiceId);
+                      const updated = await updateService(editingServiceId!, editForm);
+                      setCatalog(prev => prev ? prev.map(s => s.serviceID === updated.serviceID ? updated : s) : prev);
+                      setEditingServiceId(null);
+                    } catch (err: any) {
+                      alert('Failed to update service: ' + (err?.message || String(err)));
+                    } finally {
+                      setSavingServiceId(null);
+                    }
+                  }} className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded">{savingServiceId === editingServiceId ? 'Saving…' : 'Save changes'}</button>
+                </div>
+              </div>
             </div>
           )}
         </div>
