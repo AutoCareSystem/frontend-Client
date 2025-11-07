@@ -2,7 +2,6 @@ import Sidebar from "../../components/Sidebar";
 import RealTimeTracking from "../../components/RealTimeTracking";
 import ServiceHistory from "../../components/ServiceHistory";
 import ActivityFeed from "../../components/ActivityFeed";
-import { Bell, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface DashboardSummary {
@@ -14,11 +13,21 @@ interface DashboardSummary {
 
 interface Appointment {
   id: number;
-  serviceName: string;
-  status: "Completed" | "In Progress" | "Pending";
-  cost: number;
-  createdDate: string;
+  appointmentID?: number;
+  serviceName?: string;
+  status:
+    | "Completed"
+    | "In Progress"
+    | "Pending"
+    | "Approved"
+    | "Confirmed"
+    | "Cancelled";
+  cost?: number;
+  totalPrice?: number;
+  createdDate?: string;
+  startDate?: string;
   completedDate?: string;
+  appointmentType?: string; // "Service" or "Project"
 }
 
 export default function CustomerDashboard() {
@@ -28,17 +37,10 @@ export default function CustomerDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Get initial values from localStorage or use defaults
-  // 🔧 Change these default values here:
-  const getInitialCustomerId = () => localStorage.getItem("customerId") || "2";
-  const getInitialVehicleId = () => localStorage.getItem("vehicleId") || "2";
-
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
-    getInitialCustomerId()
-  );
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(
-    getInitialVehicleId()
-  );
+  // Get initial values from .env (priority) or localStorage
+  // Force use of .env values for real data
+  const customerId = import.meta.env.VITE_CUSTOMER_ID || localStorage.getItem("customerId") || "f003b7d9-eefe-4cb6-8f87-06ff62c54d8a";
+  const vehicleId = import.meta.env.VITE_VEHICLE_ID || localStorage.getItem("vehicleId") || "1";
 
   // Fetch actual data from API
   useEffect(() => {
@@ -46,8 +48,6 @@ export default function CustomerDashboard() {
     const fetchDashboardData = async () => {
       setLoading(true); // Set loading to true at start
       try {
-        const customerId = selectedCustomerId;
-        const vehicleId = selectedVehicleId;
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
         console.log(
@@ -140,40 +140,38 @@ export default function CustomerDashboard() {
     };
 
     fetchDashboardData();
-  }, [selectedCustomerId, selectedVehicleId]);
+  }, [customerId, vehicleId]);
 
-  // Use real appointment data for services display
+  // Separate services and projects from appointments
   const services =
     appointments.length > 0
-      ? appointments.map((apt) => ({
-          id: apt.id,
-          name: apt.serviceName,
-          status: apt.status,
-          cost: `$${apt.cost}`,
-        }))
+      ? appointments
+          .filter((apt) => apt.appointmentType !== "Project") // Standard services
+          .map((apt) => ({
+            id: apt.appointmentID || apt.id || 0,
+            name: apt.serviceName || "Service",
+            status: apt.status as any,
+            cost: `$${apt.totalPrice || apt.cost || 0}`,
+          }))
       : [];
 
-  // Customized projects/requests from customer (mock data)
-  const projects = [
-    {
-      id: 1,
-      name: "Custom Audio System Installation",
-      status: "In Progress",
-      cost: "$1200",
-    },
-    {
-      id: 2,
-      name: "Interior Leather Upgrade",
-      status: "Pending",
-      cost: "$2500",
-    },
-    { id: 3, name: "Custom Paint Job", status: "Completed", cost: "$1800" },
-  ];
+  // Customized projects/requests from customer
+  const projects =
+    appointments.length > 0
+      ? appointments
+          .filter((apt) => apt.appointmentType === "Project") // Only projects/customizations
+          .map((apt) => ({
+            id: apt.appointmentID || apt.id || 0,
+            name: apt.serviceName || "Project",
+            status: apt.status as any,
+            cost: `$${apt.totalPrice || apt.cost || 0}`,
+          }))
+      : [];
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
       <Sidebar role="customer" />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto scrollbar-hide">
         {/* Header */}
         <div className="bg-[#2a2a2a] border-b border-gray-700 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
@@ -182,47 +180,6 @@ export default function CustomerDashboard() {
               <p className="text-gray-400 mt-1">
                 Here's what's happening with your services today
               </p>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Status Indicator */}
-              <div className="flex items-center gap-2 bg-[#1a1a1a] px-3 py-2 rounded-lg">
-                <span className="text-xs text-gray-500">Active:</span>
-                <span className="text-xs font-bold text-blue-400">
-                  C:{selectedCustomerId} V:{selectedVehicleId}
-                </span>
-              </div>
-
-              {/* Customer/Vehicle Selector */}
-              <div className="flex items-center gap-2 bg-[#1a1a1a] px-3 py-2 rounded-lg">
-                <label className="text-xs text-gray-400">Customer:</label>
-                <input
-                  type="text"
-                  value={selectedCustomerId}
-                  onChange={(e) => {
-                    setSelectedCustomerId(e.target.value);
-                    localStorage.setItem("customerId", e.target.value);
-                  }}
-                  className="w-12 bg-[#3a3a3a] text-white px-2 py-1 rounded text-xs border border-gray-600 focus:outline-none focus:border-red-500"
-                />
-              </div>
-              <div className="flex items-center gap-2 bg-[#1a1a1a] px-3 py-2 rounded-lg">
-                <label className="text-xs text-gray-400">Vehicle:</label>
-                <input
-                  type="text"
-                  value={selectedVehicleId}
-                  onChange={(e) => {
-                    setSelectedVehicleId(e.target.value);
-                    localStorage.setItem("vehicleId", e.target.value);
-                  }}
-                  className="w-12 bg-[#3a3a3a] text-white px-2 py-1 rounded text-xs border border-gray-600 focus:outline-none focus:border-red-500"
-                />
-              </div>
-              <button className="p-2 bg-[#1a1a1a] rounded-lg hover:bg-[#3a3a3a] transition">
-                <Bell size={20} className="text-gray-400" />
-              </button>
-              <button className="p-2 bg-[#1a1a1a] rounded-lg hover:bg-[#3a3a3a] transition">
-                <Settings size={20} className="text-gray-400" />
-              </button>
             </div>
           </div>
         </div>
