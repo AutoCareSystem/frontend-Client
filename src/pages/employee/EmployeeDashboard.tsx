@@ -46,7 +46,7 @@ export default function EmployeeDashboard() {
   const pendingServices = useMemo(() => mockServices.filter(s => s.status === "Pending"), []);
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-[#0a0a0b] via-[#101113] to-[#16181b] text-gray-100 overflow-hidden">
+    <div className="employee-dashboard flex h-screen bg-gradient-to-br from-[#0a0a0b] via-[#101113] to-[#16181b] text-gray-100 overflow-hidden">
       <Sidebar role="employee" />
 
       <main className="flex-1 p-6 md:p-8 overflow-y-auto relative">

@@ -8,22 +8,53 @@ export type ServiceDto = {
   status?: string;
 };
 
-// In-memory dummy dataset for services (frontend-only)
-const MOCK_SERVICES: ServiceDto[] = [
-  { serviceID: 1, code: 'SRV-FULL-01', title: 'Full Car Service', description: 'Complete inspection, oil change, and safety checks.', duration: 120, price: 24000, status: 'Active' },
-  { serviceID: 2, code: 'SRV-INT-01', title: 'Interior Cleaning', description: 'Deep interior cleaning and vacuuming.', duration: 60, price: 5000, status: 'Active' },
-  { serviceID: 3, code: 'SRV-ENG-01', title: 'Engine Tuneup', description: 'Engine diagnostics and tuneup.', duration: 180, price: 35000, status: 'Inactive' },
-];
+import axios from 'axios';
 
+/**
+ * Fetch services from backend API. This function will throw if the request fails
+ * so callers can show an explicit error state. The frontend no longer ships a
+ * built-in mock catalog — the app expects the backend to provide the service list.
+ */
 export async function fetchServices(): Promise<ServiceDto[]> {
-  // Return a copy so callers can mutate without affecting the mock source
-  return Promise.resolve(MOCK_SERVICES.map(s => ({ ...s })));
+  const base = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5292';
+  const res = await axios.get(`${base}/api/Services`);
+  if (!res || !Array.isArray(res.data)) throw new Error('Invalid response from services API');
+  return res.data.map((s: any) => ({
+    serviceID: s.serviceID ?? s.serviceId ?? s.id,
+    code: s.code,
+    title: s.title,
+    description: s.description,
+    duration: s.duration,
+    price: s.price,
+    status: s.status,
+  }));
 }
 
+/**
+ * Create a service by POSTing to the backend. Returns the created service DTO
+ * as returned by the API.
+ */
 export async function createService(payload: ServiceDto): Promise<ServiceDto> {
-  const nextId = MOCK_SERVICES.reduce((m, s) => Math.max(m, s.serviceID ?? 0), 0) + 1;
-  const created: ServiceDto = { serviceID: nextId, ...payload };
-  MOCK_SERVICES.push(created);
-  return Promise.resolve({ ...created });
+  const base = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5292';
+  const body = {
+    code: payload.code,
+    title: payload.title,
+    description: payload.description,
+    duration: payload.duration,
+    price: payload.price,
+    status: payload.status,
+  };
+  const res = await axios.post(`${base}/api/Services`, body);
+  if (!res || !res.data) throw new Error('Failed to create service');
+  const s = res.data;
+  return {
+    serviceID: s.serviceID ?? s.serviceId ?? s.id,
+    code: s.code,
+    title: s.title,
+    description: s.description,
+    duration: s.duration,
+    price: s.price,
+    status: s.status,
+  };
 }
 
