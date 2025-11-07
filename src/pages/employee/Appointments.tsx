@@ -1,7 +1,7 @@
 import Sidebar from "../../components/Sidebar";
 import { Fragment, useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { fetchAppointments } from "../../api/appointments";
+import { fetchAppointments, updateAppointmentStatus } from "../../api/appointments";
 import type { AppointmentDto } from "../../api/appointments";
 
 // Local fallback dataset used only when backend is unavailable
@@ -68,6 +68,18 @@ export default function Appointments() {
         return "bg-red-500/20 text-red-400";
       default:
         return "bg-gray-500/20 text-gray-300";
+    }
+  };
+
+  const changeAppointmentStatus = async (appointmentId: number, status: 'Approved' | 'Rejected' | 'Completed') => {
+    try {
+      await updateAppointmentStatus(appointmentId, status);
+      setAppointments(prev => prev.map(p => {
+        const id = Number(p.id ?? p.appointmentID ?? 0);
+        return id === appointmentId ? { ...p, status } : p;
+      }));
+    } catch (err: any) {
+      alert('Failed to update appointment status: ' + (err?.message || String(err)));
     }
   };
 
@@ -255,12 +267,38 @@ export default function Appointments() {
                                 )}
 
                                 <div className="mt-4 text-right">
-                                  <button
-                                    onClick={() => setSelected(null)}
-                                    className="bg-red-600 hover:bg-red-700 transition px-4 py-2 rounded-md font-medium text-white"
-                                  >
-                                    Close
-                                  </button>
+                                  <div className="flex items-center justify-end gap-2">
+                                    {a.status === 'Pending' && (
+                                      <>
+                                        <button
+                                          onClick={() => changeAppointmentStatus(rowId, 'Approved')}
+                                          className="bg-green-600 hover:bg-green-700 transition px-4 py-2 rounded-md font-medium text-white"
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          onClick={() => changeAppointmentStatus(rowId, 'Rejected')}
+                                          className="bg-gray-700 hover:bg-gray-600 transition px-4 py-2 rounded-md font-medium text-white"
+                                        >
+                                          Reject
+                                        </button>
+                                      </>
+                                    )}
+                                    {a.status === 'Approved' && (
+                                      <button
+                                        onClick={() => changeAppointmentStatus(rowId, 'Completed')}
+                                        className="bg-blue-600 hover:bg-blue-700 transition px-4 py-2 rounded-md font-medium text-white"
+                                      >
+                                        Mark Complete
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => setSelected(null)}
+                                      className="bg-red-600 hover:bg-red-700 transition px-4 py-2 rounded-md font-medium text-white"
+                                    >
+                                      Close
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </td>

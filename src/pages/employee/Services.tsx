@@ -4,6 +4,7 @@ import { fetchServices } from "../../api/services";
 import type { ServiceDto } from "../../api/services";
 import { fetchAppointmentServices } from "../../api/appointmentServices";
 import type { AppointmentServiceDto } from "../../api/appointmentServices";
+import { updateAppointmentStatus } from "../../api/appointments";
 
 // No local dummy data: use backend catalog and appointment-services
 
@@ -75,6 +76,21 @@ export default function Services() {
       return true;
     });
   }, [appointmentServices, apptStatusFilter, apptOptionFilter, query]);
+
+  // Status change helpers
+  const changeAppointmentStatus = async (appointmentID: number | undefined, status: 'Approved' | 'Rejected' | 'Completed') => {
+    if (!appointmentID) return;
+    try {
+      await updateAppointmentStatus(appointmentID, status);
+      setAppointmentServices(prev => prev ? prev.map(a => (a.appointmentID === appointmentID ? { ...a, status } : a)) : prev);
+      if (selectedAppointment && selectedAppointment.appointmentID === appointmentID) {
+        setSelectedAppointment(prev => prev ? { ...prev, status } : prev);
+      }
+    } catch (err: any) {
+      alert('Failed to update status: ' + (err?.message || String(err)));
+    }
+  };
+
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
@@ -179,38 +195,58 @@ export default function Services() {
                   </div>
 
                   {/* Inline expanded details under the clicked row */}
-                    {selectedAppointment && selectedAppointment.appointmentID === a.appointmentID && (
-          <div className="mt-6 bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
+                            {selectedAppointment && selectedAppointment.appointmentID === a.appointmentID && (
+                  <div className="mt-6 bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-semibold">Appointment — {selectedAppointment.customerName}</h2>
-                <div className="text-sm text-gray-300">{selectedAppointment.startDate ? new Date(selectedAppointment.startDate).toLocaleString() : selectedAppointment.time}</div>
-                <div className="mt-3 text-gray-200">Vehicle: {selectedAppointment.vehicleInfo}</div>
-                <div className="mt-2 text-gray-200">Assigned To: {selectedAppointment.employeeName ?? 'Not Assigned'}</div>
+                        <h2 className="text-2xl font-semibold">Appointment — {selectedAppointment!.customerName}</h2>
+                        <div className="text-sm text-gray-300">{selectedAppointment!.startDate ? new Date(selectedAppointment!.startDate).toLocaleString() : selectedAppointment!.time}</div>
+                        <div className="mt-3 text-gray-200">Vehicle: {selectedAppointment!.vehicleInfo}</div>
+                        <div className="mt-2 text-gray-200">Assigned To: {selectedAppointment!.employeeName ?? 'Not Assigned'}</div>
               </div>
               <div className="flex flex-col gap-2">
                 <div className="text-right">
-                  <div className="text-sm">Status: <span className="font-medium">{selectedAppointment.status}</span></div>
-                  <div className="text-red-500 font-bold mt-1">{formatPrice(selectedAppointment.totalPrice)}</div>
+                          <div className="text-sm">Status: <span className="font-medium">{selectedAppointment!.status}</span></div>
+                          <div className="text-red-500 font-bold mt-1">{formatPrice(selectedAppointment!.totalPrice)}</div>
                 </div>
-                <button onClick={() => setSelectedAppointment(null)} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">Close</button>
+                <div className="flex items-center gap-2">
+                  {selectedAppointment!.status === 'Pending' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          const uid = (typeof window !== 'undefined') ? (localStorage.getItem('employeeID') ?? localStorage.getItem('userID') ?? localStorage.getItem('userid') ?? localStorage.getItem('UserID')) : null;
+                          console.log('Approving appointment - UserID (from localStorage):', uid);
+                          changeAppointmentStatus(selectedAppointment!.appointmentID, 'Approved');
+                        }}
+                        className="px-3 py-1 bg-green-600 rounded text-sm"
+                      >
+                        Approve
+                      </button>
+                      <button onClick={() => changeAppointmentStatus(selectedAppointment!.appointmentID, 'Rejected')} className="px-3 py-1 bg-gray-700 rounded text-sm">Reject</button>
+                    </>
+                  )}
+                  {selectedAppointment!.status === 'Approved' && (
+                    <button onClick={() => changeAppointmentStatus(selectedAppointment!.appointmentID, 'Completed')} className="px-3 py-1 bg-blue-600 rounded text-sm">Mark Complete</button>
+                  )}
+                  <button onClick={() => setSelectedAppointment(null)} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">Close</button>
+                </div>
               </div>
             </div>
 
             <div className="mt-4">
-              {selectedAppointment.packageName && <div className="text-sm">Package: {selectedAppointment.packageName} ({selectedAppointment.packageType})</div>}
-              {selectedAppointment.packageServices && selectedAppointment.packageServices.length > 0 && (
-                <ul className="text-sm mt-1 list-disc list-inside text-gray-300">
-                  {selectedAppointment.packageServices.map((ps, i) => (<li key={i}>{ps.title} — {formatPrice(ps.price)}</li>))}
-                </ul>
-              )}
-              {selectedAppointment.customServices && selectedAppointment.customServices.length > 0 && (
-                <div className="mt-1 text-sm text-gray-300">Custom services:
-                  <ul className="list-disc list-inside">
-                    {selectedAppointment.customServices.map((cs, i) => (<li key={i}>{cs.title} — {formatPrice(cs.price)}</li>))}
-                  </ul>
-                </div>
-              )}
+                      {selectedAppointment!.packageName && <div className="text-sm">Package: {selectedAppointment!.packageName} ({selectedAppointment!.packageType})</div>}
+                      {selectedAppointment!.packageServices && selectedAppointment!.packageServices.length > 0 && (
+                        <ul className="text-sm mt-1 list-disc list-inside text-gray-300">
+                          {selectedAppointment!.packageServices.map((ps, i) => (<li key={i}>{ps.title} — {formatPrice(ps.price)}</li>))}
+                        </ul>
+                      )}
+                      {selectedAppointment!.customServices && selectedAppointment!.customServices.length > 0 && (
+                        <div className="mt-1 text-sm text-gray-300">Custom services:
+                          <ul className="list-disc list-inside">
+                            {selectedAppointment!.customServices.map((cs, i) => (<li key={i}>{cs.title} — {formatPrice(cs.price)}</li>))}
+                          </ul>
+                        </div>
+                      )}
             </div>
           </div>
         )}

@@ -1,6 +1,7 @@
 import Sidebar from "../../components/Sidebar";
 import { useMemo, useState, useEffect } from "react";
 import { fetchProjects, type ProjectDto } from "../../api/projects";
+import { updateAppointmentStatus } from "../../api/appointments";
 import { CalendarDays, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -45,18 +46,32 @@ export default function Projects() {
     );
   };
 
-  const approveProject = (id: number) =>
-    setProjects((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: "Approved" } : p))
-    );
-  const rejectProject = (id: number) =>
-    setProjects((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: "Rejected" } : p))
-    );
-  const completeProject = (id: number) =>
-    setProjects((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: "Completed" } : p))
-    );
+  const approveProject = async (id: number) => {
+    try {
+      await updateAppointmentStatus(id, 'Approved');
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'Approved' } : p)));
+    } catch (err: any) {
+      alert('Failed to approve project: ' + (err?.message || String(err)));
+    }
+  };
+
+  const rejectProject = async (id: number) => {
+    try {
+      await updateAppointmentStatus(id, 'Rejected');
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'Rejected' } : p)));
+    } catch (err: any) {
+      alert('Failed to reject project: ' + (err?.message || String(err)));
+    }
+  };
+
+  const completeProject = async (id: number) => {
+    try {
+      await updateAppointmentStatus(id, 'Completed');
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'Completed' } : p)));
+    } catch (err: any) {
+      alert('Failed to complete project: ' + (err?.message || String(err)));
+    }
+  };
 
   const filtered = useMemo(
     () =>

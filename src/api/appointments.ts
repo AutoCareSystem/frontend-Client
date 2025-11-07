@@ -87,3 +87,68 @@ export async function fetchAppointments(params?: { type?: string; status?: strin
     } as AppointmentDto;
   });
 }
+
+/**
+ * Update appointment status on the backend.
+ * Behavior:
+ * - Reads the current user id from localStorage and sends it as header 'X-User-ID' when present.
+ * - Ensures the appointment id is passed as an integer in the request body as `appointmentID`.
+ * - Also passes `employeeID` in the body when available (from the argument or localStorage).
+ * - Calls action-style endpoints: /api/Appointments/{id}/accept, /reject, /complete, etc.
+ */
+export async function updateAppointmentStatus(
+  appointmentId: number | string,
+  status: string,
+  employeeID?: string | null
+): Promise<void> {
+  const userId = typeof window !== 'undefined' ? (localStorage.getItem('UserId') ?? localStorage.getItem('UserID') ?? localStorage.getItem('userid')) : null;
+    const headers: Record<string, string> = {};
+    // Send multiple common header variants so different backend expectations are met
+    if (userId) {
+      headers['X-User-ID'] = userId as string;
+      headers['UserID'] = userId as string;
+      headers['x-user-id'] = userId as string;
+    }
+
+  // Try to obtain employeeID from argument then localStorage as a fallback
+  let emp = employeeID ?? (typeof window !== 'undefined' ? (localStorage.getItem('employeeID') ?? localStorage.getItem('employeeId') ?? localStorage.getItem('employee')) : null);
+
+  const idNumber = typeof appointmentId === 'string' ? Number(appointmentId) : appointmentId;
+  // Map status display strings to action endpoints
+  const actionMap: Record<string, string> = {
+    Approved: 'accept',
+    Rejected: 'reject',
+    Completed: 'complete',
+    Pending: 'pending',
+  };
+  const action = actionMap[status] ?? String(status).toLowerCase();
+
+  // Backend expects the appointment id in the URL and employee id in the body (see curl example).
+  // Ensure we send the same shape that works in the backend docs: { employeeID: '<id>' }
+  if (!emp) {
+    throw new Error('employeeID is required to update appointment status. Set localStorage.employeeID or pass employeeID to the helper.');
+  }
+  const body: any = { employeeID: emp };
+
+    const url = `${API_BASE}/api/Appointments/${idNumber}/${action}`;
+    // Debug: log request details to help diagnose 400 responses
+    try {
+    // eslint-disable-next-line no-console
+    console.debug('[updateAppointmentStatus] PUT', url, { headers, body });
+      const res = await axios.put(url, body, { headers });
+      // eslint-disable-next-line no-console
+      console.debug('[updateAppointmentStatus] response', res.status, res.data);
+    } catch (err: any) {
+      // Log full response for easier debugging
+      // eslint-disable-next-line no-console
+      console.error('[updateAppointmentStatus] error', err?.response?.status, err?.response?.data || err?.message || err);
+      if (err?.response) {
+        const msg = err.response.data?.message ?? err.response.data ?? err.response.statusText ?? 'Bad Request';
+        // Include status and server payload in thrown error for visibility in UI
+        throw new Error(`Failed to update appointment status (${err.response.status}): ${JSON.stringify(msg)}`);
+      }
+      throw err;
+    }
+
+  await axios.put(`${API_BASE}/api/Appointments/${idNumber}/${action}`, body, { headers });
+}
