@@ -95,6 +95,9 @@ export default function Signup() {
         >
           {submitting ? 'Signing up...' : 'Sign Up'}
         </button>
+        <div className="mt-3 text-center text-sm text-gray-300">
+          Already have an account? <a href="/login" className="text-red-500 underline">Login</a>
+        </div>
       </div>
     </div>
   );

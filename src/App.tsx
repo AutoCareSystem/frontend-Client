@@ -15,14 +15,16 @@ import UserManagement from "./pages/employee/UserManagement";
 
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import Home from "./pages/Home";
 
 export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+  {/* Auth */}
+  <Route path="/" element={<Home />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/signup" element={<Signup />} />
 
         {/* Customer Routes */}
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
