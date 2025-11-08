@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send } from 'lucide-react';
+import type { ChatMessage, ChatResponse, TimeSlot } from "../types/ChatTypes"; // Import types
 
-interface Message {
-  content: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-}
+// ⚠️ IMPORTANT: Backend Chatbot Service URL
+// const CHATBOT_API_URL = 'http://localhost:5294'; 
+const CHATBOT_API_URL = 'http://localhost:5093'; 
+
+const API_ENDPOINT = `${CHATBOT_API_URL}/api/Chatbot/chat`; // Endpoint defined in ChatbotController.cs
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -13,9 +14,9 @@ interface ChatWindowProps {
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      content: "Hello! I can help you check available time slots for your appointment. What date would you like to check?",
+      content: "Hello! I can check available time slots for the next 7 days. What service are you interested in and what date would you prefer?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -24,109 +25,116 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  // Helper function to format the time slots for display
+  const formatSlotsForDisplay = (slots: TimeSlot[]): string => {
+    const available = slots.filter(s => s.IsAvailable);
+    if (available.length === 0) {
+        return "\n\nNo available slots were found based on your query.";
+    }
 
-    // Add user message
-    const userMessage: Message = {
-      content: input,
-      sender: 'user',
-      timestamp: new Date()
-    };
+    // Group by Date for better readability
+    const groupedSlots = available.reduce((acc, slot) => {
+        const dateKey = new Date(slot.Date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        if (!acc[dateKey]) acc[dateKey] = [];
+        acc[dateKey].push(slot.Time);
+        return acc;
+    }, {} as Record<string, string[]>);
+
+    let slotsText = "\n\n--- Structured Availability ---\n";
+    for (const [date, times] of Object.entries(groupedSlots)) {
+        slotsText += `**${date}**: ${times.join(', ')}\n`;
+    }
+    return slotsText;
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userPrompt = input.trim();
+    
+    // 1. Add user message to state
+    const userMessage: ChatMessage = { content: userPrompt, sender: 'user', timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your Gemini API key and actual API call
-      const GEMINI_API_KEY = 'AIzaSyCYJ0BBeLBMa5y3_mpukZmeK1DkbHzn4kI';
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GEMINI_API_KEY}`
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `User wants to know about available time slots. Current message: ${input}. 
-                     Respond as a helpful appointment booking assistant. If they ask about time slots, 
-                     mention that slots are available from 9 AM to 5 PM with 1-hour intervals.`
-            }]
-          }]
-        })
-      });
+        // 2. API Call: POST to the Chatbot service
+        const response = await fetch(API_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            // Body matches ChatRequestDto from backend
+            body: JSON.stringify({ message: userPrompt }), 
+        });
 
-      const data = await response.json();
-      const botResponse = data.candidates[0].content.parts[0].text;
+        if (!response.ok) {
+            throw new Error(`API status: ${response.status}`);
+        }
 
-      // Add bot response
-      const botMessage: Message = {
-        content: botResponse,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botMessage]);
+        const data: ChatResponse = await response.json();
+
+        let botContent = data.message;
+        
+        // 3. Process structured data if available
+        if (data.availableSlots && data.availableSlots.length > 0) {
+            botContent += formatSlotsForDisplay(data.availableSlots);
+        }
+
+        // 4. Add bot response to state
+        const botMessage: ChatMessage = { content: botContent, sender: 'bot', timestamp: new Date() };
+        setMessages(prev => [...prev, botMessage]);
+
     } catch (error) {
-      console.error('Error:', error);
-      // Add error message
-      const errorMessage: Message = {
-        content: "I'm sorry, I'm having trouble responding right now. Please try again later.",
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+        console.error("Chat API Error:", error);
+        const errorMessage: ChatMessage = { 
+            content: "I couldn't reach the service. Please ensure the Chatbot Backend is running on port 5294.", 
+            sender: 'bot', 
+            timestamp: new Date() 
+        };
+        setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-[#2a2a2a] rounded-lg shadow-xl flex flex-col">
+    <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-gray-800 rounded-xl shadow-2xl flex flex-col z-50">
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-700">
-        <h3 className="text-lg font-semibold text-white">Appointment Assistant</h3>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
-          <X className="w-6 h-6" />
+      <div className="p-4 bg-red-600 text-white flex justify-between items-center rounded-t-xl">
+        <h3 className="font-semibold">AutoService AI Bot</h3>
+        <button onClick={onClose} className="p-1 rounded-full hover:bg-red-700" aria-label="Close Chat">
+          <X size={20} />
         </button>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div
-              className={`max-w-[80%] p-3 rounded-lg ${
-                message.sender === 'user'
-                  ? 'bg-red-600 text-white'
-                  : 'bg-gray-700 text-white'
+      {/* Messages Display */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        {messages.map((msg, index) => (
+          <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div 
+              className={`max-w-[85%] p-3 rounded-xl whitespace-pre-wrap ${
+                msg.sender === 'user'
+                  ? 'bg-red-600 text-white rounded-br-none'
+                  : 'bg-gray-700 text-white rounded-tl-none'
               }`}
             >
-              {message.content}
+              {msg.content}
             </div>
           </div>
         ))}
+        {/* Loading Indicator */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-700 text-white p-3 rounded-lg">
-              <div className="flex space-x-2">
+            <div className="bg-gray-700 text-white p-3 rounded-lg flex space-x-2">
                 <div className="w-2 h-2 bg-white rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                 <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
-              </div>
             </div>
           </div>
         )}
@@ -142,14 +150,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ isOpen, onClose }) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Type your message..."
+            disabled={isLoading}
             className="flex-1 p-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
           />
           <button
             onClick={handleSend}
-            disabled={isLoading}
-            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+            disabled={isLoading || !input.trim()}
+            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-500"
           >
-            <Send className="w-5 h-5" />
+            <Send size={20} />
           </button>
         </div>
       </div>

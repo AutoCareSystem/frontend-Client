@@ -8,7 +8,7 @@ const ChatbotButton: React.FC = () => {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 flex items-center gap-3 group">
+      <div className="fixed bottom-6 right-6 flex items-center gap-3 group z-50"> {/* Added z-50 for layering */}
         {/* Tooltip Message */}
         <div
           className={`bg-gray-800 text-white px-4 py-2 rounded-lg whitespace-nowrap transition-opacity duration-200 ${
@@ -30,9 +30,11 @@ const ChatbotButton: React.FC = () => {
           className="relative p-4 bg-red-600 rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 animate-pulse"
           aria-label="Check Available Slots"
         >
-          <MessageCircle className="w-6 h-6 text-white" />
+          <MessageCircle size={30} className="text-white" />
         </button>
       </div>
+      
+      {/* 4. Render the functional chat window, passing the state and close handler */}
       <ChatWindow isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </>
   );
