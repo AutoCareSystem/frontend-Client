@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { resetPassword } from '../../api/profile';
 
 interface ChangePasswordFormProps {
+  userId: string;
   onSuccess?: () => void;
 }
 
-const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onSuccess }) => {
+const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ userId, onSuccess }) => {
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -64,14 +66,7 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({ onSuccess }) =>
     setIsLoading(true);
 
     try {
-      await axios.post(
-        `/api/auth/change-password`,
-        {
-          currentPassword: formData.currentPassword,
-          newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword,
-        }
-      );
+      await resetPassword(userId, {currentPassword: formData.currentPassword, newPassword: formData.newPassword});
 
       setSuccess('Password changed successfully!');
       setFormData({

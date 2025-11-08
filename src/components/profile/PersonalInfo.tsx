@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { updateCutomerProfile } from '../../api/profile';
 
 interface PersonalInfoProps {
   userId: string;
@@ -44,17 +44,7 @@ const PersonalInfo: React.FC<PersonalInfoProps> = ({ userId, initialData, onSave
     setIsLoading(true);
 
     try {
-      const updateData = {
-        name: formData.name,
-        phone: formData.phone,
-        address: formData.address,
-      };
-
-      await axios.put(
-        `/api/Profile/customer/${userId}`,
-        updateData
-      );
-
+      await updateCutomerProfile(userId, {userName: formData.name, phoneNumber: formData.phone, address: formData.address});
       setSuccess('Personal information updated successfully!');
       onSaveSuccess?.();
     } catch (err) {

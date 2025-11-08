@@ -8,10 +8,10 @@ import ChangePasswordForm from '../../components/profile/ChangePasswordForm';
 import { getCustomerProfile } from '../../api/profile';
 
 export interface ProfileData {
-  userId: string;
-  name: string;
+  userID: string;
+  userName: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   address: string;
   loyaltyPoints: number;
   vehicle?: {
@@ -160,11 +160,11 @@ export default function CustomerProfile() {
                 {/* Personal Information Tab */}
                 {activeTab === 'personal' && (
                   <PersonalInfo
-                    userId={profileData.userId}
+                    userId={profileData.userID}
                     initialData={{
-                      name: profileData.name,
+                      name: profileData.userName,
                       email: profileData.email,
-                      phone: profileData.phone,
+                      phone: profileData.phoneNumber,
                       address: profileData.address,
                     }}
                     onSaveSuccess={fetchProfileData}
@@ -174,7 +174,7 @@ export default function CustomerProfile() {
                 {/* Vehicle Information Tab */}
                 {activeTab === 'vehicle' && (
                   <VehicleInfo
-                    userId={profileData.userId}
+                    userId={profileData.userID}
                     initialData={profileData.vehicle}
                     onSaveSuccess={fetchProfileData}
                     onDeleteSuccess={fetchProfileData}
@@ -183,7 +183,7 @@ export default function CustomerProfile() {
 
                 {/* Change Password Tab */}
                 {activeTab === 'password' && (
-                  <ChangePasswordForm onSuccess={fetchProfileData} />
+                  <ChangePasswordForm userId={profileData.userID} onSuccess={fetchProfileData} />
                 )}
               </div>
             </div>
