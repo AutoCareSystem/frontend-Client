@@ -5,7 +5,7 @@ import {
 import { Wrench } from "lucide-react";
 
 interface SidebarProps {
-  role: "customer" | "employee";
+  role: "Customer" | "Employee";
 }
 
 export default function Sidebar({ role }: SidebarProps) {
@@ -15,6 +15,7 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Dashboard", path: "/customer/dashboard", icon: <Home size={20} /> },
     { name: "Appointments", path: "/customer/appointments", icon: <Calendar size={20} /> },
     { name: "Modifications", path: "/customer/modifications", icon: <Folder size={20} /> },
+    { name: "Profile", path: "/customer/profile", icon: <User size={20} /> },
   ];
 
   const employeeMenu = [
@@ -27,7 +28,7 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Profile", path: "/employee/profile", icon: <User size={20} /> },
   ];
 
-  const menuItems = role === "customer" ? customerMenu : employeeMenu;
+  const menuItems = role === "Customer" ? customerMenu : employeeMenu;
 
   return (
     <aside className="h-screen w-64 bg-[#0a0a0a] text-gray-100 flex flex-col shadow-lg">

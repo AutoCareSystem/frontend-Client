@@ -1,144 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { profileService } from '../../api/profileService';
-import type { CustomerProfile } from '../../types/profile.types';
-import ProfileHeader from '../../components/profile/ProfileHeader';
-import UserInfoCard from '../../components/profile/UserInfoCard';
-import VehicleCard from '../../components/profile/VehicleCard';
-import ServiceHistory from '../../components/profile/ServiceHistory';
-import Projects from '../../components/profile/Projects';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { User, Car, Lock } from 'lucide-react';
+import Sidebar from '../../components/Sidebar';
+import PersonalInfo from '../../components/profile/PersonalInfo';
+import VehicleInfo from '../../components/profile/VehicleInfo';
+import ChangePasswordForm from '../../components/profile/ChangePasswordForm';
+import { getCustomerProfile } from '../../api/profile';
 
-import Sidebar from "../../components/Sidebar";
+export interface ProfileData {
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  loyaltyPoints: number;
+  vehicle?: {
+    plateNumber: string;
+    model: string;
+    company: string;
+    year: number;
+    vin: string;
+  } | null;
+}
 
-const ProfilePage: React.FC = () => {
-  const [profile, setProfile] = useState<CustomerProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+type TabType = 'personal' | 'vehicle' | 'password';
 
-  const loadProfile = async () => {
-    if (!userId) {
-      setError('No userId available. Please sign in.');
-      return;
-    }
-    
+export default function CustomerProfile() {
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('personal');
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
     try {
-      setLoading(true);
-      const data = await profileService.getProfile(parseInt(userId));
-      setProfile(data);
-      setError(null);
+      setIsLoading(true);
+      setError('');
+      
+      // Get user ID from token or local storage
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('No authentication token found. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Decode token to get user ID (basic JWT decoding)
+      let userId = '';
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        userId = payload.userId || payload.sub || payload.id || payload.userID;
+        console.log('Decoded userId from token:', userId);
+      } catch (e) {
+        console.error('Failed to decode token:', e);
+        userId = localStorage.getItem('userId') || '';
+      }
+
+      if (!userId) {
+        setError('Could not identify user. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+      const response = await getCustomerProfile(userId);
+      setProfileData({
+         ...response,
+      });
     } catch (err: any) {
-      if (err?.response) {
-        const status = err.response.status;
-        const body = err.response.data;
-        setError(`Request failed: ${status} - ${typeof body === 'string' ? body : JSON.stringify(body).slice(0,1000)}`);
+      console.error('Error fetching profile:', err);
+      
+      // Show more detailed error message
+      if (err.response?.data?.message) {
+        setError(`Server error: ${err.response.data.message}`);
+      } else if (err.response?.status === 404) {
+        setError('Profile not found. Please ensure your account is set up correctly.');
+      } else if (err.response?.status === 401) {
+        setError('Unauthorized. Please log in again.');
       } else {
-        setError(err?.message || 'Failed to load profile');
+        setError('Failed to load profile data. Please try again later.');
       }
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  function getUserIdFromToken(): string | null {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) return null;
-      const parts = token.split('.');
-      if (parts.length < 2) return null;
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-      const id = payload.userId ?? payload.userID ?? payload.sub ?? payload.nameid ?? null;
-      return id == null ? null : String(id);
-    } catch {
-      return null;
-    }
-  }
+  const tabs = [
+    { id: 'personal' as TabType, label: 'Personal Information', icon: User },
+    { id: 'vehicle' as TabType, label: 'Vehicle Information', icon: Car },
+    { id: 'password' as TabType, label: 'Change Password', icon: Lock },
+  ];
 
-  useEffect(() => {
-    let mounted = true;
-    const uidFromStorage = localStorage.getItem('userId');
-    const uid = uidFromStorage ? uidFromStorage : getUserIdFromToken();
-    
-    console.log('User ID from storage:', uidFromStorage);
-    console.log('User ID from token:', getUserIdFromToken());
-    console.log('Access token:', localStorage.getItem('accessToken'));
-    
-    if (!uid) {
-      setError('No userId available. Please sign in.');
-      return;
-    }
-    setUserId(uid);
-
-    const initialLoad = async () => {
-      try {
-        setLoading(true);
-        const data = await profileService.getProfile(parseInt(uid));
-        if (!mounted) return;
-        setProfile(data);
-        setError(null);
-      } catch (err: any) {
-        if (!mounted) return;
-        // Surface detailed server error when available to help debug auth/redirects
-        if (err?.response) {
-          const status = err.response.status;
-          const body = err.response.data;
-          setError(`Request failed: ${status} - ${typeof body === 'string' ? body : JSON.stringify(body).slice(0,1000)}`);
-        } else {
-          setError(err?.message || 'Failed to load profile');
-        }
-        // expose token presence in console for quick debugging
-        console.debug('accessToken present:', !!localStorage.getItem('accessToken'));
-      } finally {
-        if (!mounted) return;
-        setLoading(false);
-      }
-    };
-
-    initialLoad();
-    return () => { mounted = false; };
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-        <Sidebar role="customer" />
-        <main className="flex-1 p-8 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-            <p className="mt-4 text-gray-400">Loading profile...</p>
-          </div>
+        <Sidebar role="Customer" />
+        <main className="flex-1 p-8 overflow-y-auto flex items-center justify-center">
+          <div className="text-gray-400">Loading profile...</div>
         </main>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !profileData) {
     return (
       <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-        <Sidebar role="customer" />
-        <main className="flex-1 p-8 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-red-500 text-xl mb-4">Error</div>
-            <p className="text-gray-400">{error}</p>
-            <button
-              onClick={loadProfile}
-              className="mt-4 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium"
-            >
-              Retry
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-        <Sidebar role="customer" />
-        <main className="flex-1 p-8 flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-400">No profile found</p>
-          </div>
+        <Sidebar role="Customer" />
+        <main className="flex-1 p-8 overflow-y-auto">
+          <div className="bg-red-900 text-red-200 p-4 rounded-lg">{error}</div>
+          <button
+            onClick={fetchProfileData}
+            className="mt-4 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded"
+          >
+            Retry
+          </button>
         </main>
       </div>
     );
@@ -146,35 +122,74 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar role="customer" />
+      <Sidebar role="Customer" />
       <main className="flex-1 p-8 overflow-y-auto">
-        <h1 className="text-3xl font-bold text-red-500 mb-6">My Profile</h1>
-        <div className="space-y-6">
-          <ProfileHeader 
-            name={profile.user.name} 
-            loyaltyPoints={profile.user.loyaltyPoints} 
-          />
-          <div className="grid grid-cols-1 gap-6">
-            <UserInfoCard 
-              userInfo={profile.user} 
-              onUpdate={loadProfile} 
-            />
-            <VehicleCard 
-              vehicle={profile.vehicle}
-              userId={profile.user.userID}
-              onUpdate={loadProfile}
-            />
-            <ServiceHistory 
-              history={profile.serviceHistory} 
-            />
-            <Projects 
-              projects={profile.projects} 
-            />
-          </div>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold text-red-500 mb-8">My Profile</h1>
+
+          {error && !isLoading && (
+            <div className="bg-red-900 text-red-200 p-4 rounded-lg mb-6 border border-red-700">{error}</div>
+          )}
+
+          {profileData && (
+            <div>
+              {/* Tabs Navigation */}
+              <div className="flex gap-2 mb-8 border-b border-gray-700">
+                {tabs.map((tab) => {
+                  const TabIcon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all border-b-2 ${
+                        isActive
+                          ? 'border-red-500 text-red-500'
+                          : 'border-transparent text-gray-400 hover:text-gray-200'
+                      }`}
+                    >
+                      <TabIcon size={20} />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tab Content */}
+              <div className="bg-[#2a2a2a] p-8 rounded-xl border border-gray-700">
+                {/* Personal Information Tab */}
+                {activeTab === 'personal' && (
+                  <PersonalInfo
+                    userId={profileData.userId}
+                    initialData={{
+                      name: profileData.name,
+                      email: profileData.email,
+                      phone: profileData.phone,
+                      address: profileData.address,
+                    }}
+                    onSaveSuccess={fetchProfileData}
+                  />
+                )}
+
+                {/* Vehicle Information Tab */}
+                {activeTab === 'vehicle' && (
+                  <VehicleInfo
+                    userId={profileData.userId}
+                    initialData={profileData.vehicle}
+                    onSaveSuccess={fetchProfileData}
+                    onDeleteSuccess={fetchProfileData}
+                  />
+                )}
+
+                {/* Change Password Tab */}
+                {activeTab === 'password' && (
+                  <ChangePasswordForm onSuccess={fetchProfileData} />
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
   );
-};
-
-export default ProfilePage;
+}

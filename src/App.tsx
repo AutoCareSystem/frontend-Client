@@ -3,7 +3,6 @@ import ChatbotButton from "./components/ChatbotButton";
 import CustomerDashboard from "./pages/customer/Dashboard";
 import BookAppointment from "./pages/customer/BookAppointment";
 import Modifications from "./pages/customer/Modifications";
-import Chatbot from "./pages/customer/Chatbot";
 import CustomerProfile from "./pages/customer/Profile";
 
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
@@ -31,7 +30,6 @@ export default function App() {
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
         <Route path="/customer/appointments" element={<BookAppointment />} />
         <Route path="/customer/modifications" element={<Modifications />} />
-        <Route path="/customer/chatbot" element={<Chatbot />} />
         <Route path="/customer/profile" element={<CustomerProfile />} />
 
         {/* Employee Routes */}

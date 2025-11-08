@@ -31,7 +31,7 @@ export default function UserManagement() {
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar role="employee" />
+      <Sidebar role="Employee" />
       <main className="flex-1 p-8 overflow-y-auto">
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-red-500">User Management</h1>

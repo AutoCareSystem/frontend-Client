@@ -5,7 +5,7 @@ import axios from "axios";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"customer" | "employee">("customer");
+  const [role, setRole] = useState<"Customer" | "Employee">("Customer");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ export default function Login() {
       });
 
       // Navigate based on backend role
-      if (res.data.role === "customer") navigate("/customer/dashboard");
+      if (res.data.role === "Customer") navigate("/customer/dashboard");
       else navigate("/employee/dashboard");
     } catch (err: any) {
       setError("Invalid email or password");
@@ -61,11 +61,11 @@ export default function Login() {
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
           value={role}
           onChange={(e) =>
-            setRole(e.target.value as "customer" | "employee")
+            setRole(e.target.value as "Customer" | "Employee")
           }
         >
-          <option value="customer">Customer</option>
-          <option value="employee">Employee</option>
+          <option value="Customer">Customer</option>
+          <option value="Employee">Employee</option>
         </select>
 
         {error && <p className="text-red-500 mb-3">{error}</p>}
