@@ -96,8 +96,17 @@ export async function fetchAppointmentServices(): Promise<AppointmentServiceDto[
     if (res && Array.isArray(res.data)) {
       return res.data.map((s: any) => ({
         appointmentID: s.appointmentID ?? s.appointmentId ?? s.id,
-        customerName: sanitize(s.customerName) ?? sanitize(s.customer?.user?.normalizedUserName) ?? sanitize(s.customer?.user?.userName) ?? undefined,
-        customerEmail: sanitize(s.customerEmail) ?? sanitize(s.customer?.user?.email) ?? undefined,
+        // customer name fallbacks: direct field, nested user, or common customer object shapes
+        customerName: sanitize(s.customerName)
+          ?? sanitize(s.customer?.user?.normalizedUserName)
+          ?? sanitize(s.customer?.user?.userName)
+          ?? sanitize(s.customer?.userName)
+          ?? sanitize(s.user?.userName)
+          ?? sanitize(s.userName)
+          ?? sanitize(s.customer?.name)
+          ?? ((s.customer?.firstName || s.customer?.lastName) ? sanitize(`${s.customer?.firstName ?? ''} ${s.customer?.lastName ?? ''}`) : undefined)
+          ?? undefined,
+  customerEmail: sanitize(s.customerEmail) ?? sanitize(s.customer?.user?.email) ?? sanitize(s.user?.email) ?? sanitize(s.customer?.email) ?? undefined,
         vehicleInfo: sanitize(s.vehicleInfo) ?? (() => {
           const v = s.vehicle ?? s.vehicleInfo ?? s.vehicleDetails;
           if (!v) return undefined;

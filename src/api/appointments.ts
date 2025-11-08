@@ -111,7 +111,8 @@ export async function updateAppointmentStatus(
     }
 
   // Try to obtain employeeID from argument then localStorage as a fallback
-  let emp = employeeID ?? (typeof window !== 'undefined' ? (localStorage.getItem('employeeID') ?? localStorage.getItem('employeeId') ?? localStorage.getItem('employee')) : null);
+  // Prefer the 'EmployeeID' key (capital E) in localStorage, fall back to older variants
+  let emp = employeeID ?? (typeof window !== 'undefined' ? (localStorage.getItem('EmployeeID') ?? localStorage.getItem('employeeID') ?? localStorage.getItem('employeeId') ?? localStorage.getItem('employee')) : null);
 
   const idNumber = typeof appointmentId === 'string' ? Number(appointmentId) : appointmentId;
   // Map status display strings to action endpoints
@@ -123,32 +124,31 @@ export async function updateAppointmentStatus(
   };
   const action = actionMap[status] ?? String(status).toLowerCase();
 
-  // Backend expects the appointment id in the URL and employee id in the body (see curl example).
-  // Ensure we send the same shape that works in the backend docs: { employeeID: '<id>' }
+  // Backend expects the appointment id in the URL and employee id (and appointmentID) in the body.
+  // Ensure we send the shape that backend requires: { appointmentID: <id>, employeeID: '<id>' }
   if (!emp) {
     throw new Error('employeeID is required to update appointment status. Set localStorage.employeeID or pass employeeID to the helper.');
   }
-  const body: any = { employeeID: emp };
+  const body: any = { appointmentID: idNumber, employeeID: emp };
 
-    const url = `${API_BASE}/api/Appointments/${idNumber}/${action}`;
-    // Debug: log request details to help diagnose 400 responses
-    try {
+  const url = `${API_BASE}/api/Appointments/${idNumber}/${action}`;
+  // Debug: log request details to help diagnose 400 responses
+  try {
     // eslint-disable-next-line no-console
     console.debug('[updateAppointmentStatus] PUT', url, { headers, body });
-      const res = await axios.put(url, body, { headers });
-      // eslint-disable-next-line no-console
-      console.debug('[updateAppointmentStatus] response', res.status, res.data);
-    } catch (err: any) {
-      // Log full response for easier debugging
-      // eslint-disable-next-line no-console
-      console.error('[updateAppointmentStatus] error', err?.response?.status, err?.response?.data || err?.message || err);
-      if (err?.response) {
-        const msg = err.response.data?.message ?? err.response.data ?? err.response.statusText ?? 'Bad Request';
-        // Include status and server payload in thrown error for visibility in UI
-        throw new Error(`Failed to update appointment status (${err.response.status}): ${JSON.stringify(msg)}`);
-      }
-      throw err;
+    const res = await axios.put(url, body, { headers });
+    // eslint-disable-next-line no-console
+    console.debug('[updateAppointmentStatus] response', res.status, res.data);
+    return;
+  } catch (err: any) {
+    // Log full response for easier debugging
+    // eslint-disable-next-line no-console
+    console.error('[updateAppointmentStatus] error', err?.response?.status, err?.response?.data || err?.message || err);
+    if (err?.response) {
+      const msg = err.response.data?.message ?? err.response.data ?? err.response.statusText ?? 'Bad Request';
+      // Include status and server payload in thrown error for visibility in UI
+      throw new Error(`Failed to update appointment status (${err.response.status}): ${JSON.stringify(msg)}`);
     }
-
-  await axios.put(`${API_BASE}/api/Appointments/${idNumber}/${action}`, body, { headers });
+    throw err;
+  }
 }

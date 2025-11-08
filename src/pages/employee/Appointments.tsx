@@ -3,6 +3,7 @@ import { Fragment, useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchAppointments, updateAppointmentStatus } from "../../api/appointments";
 import type { AppointmentDto } from "../../api/appointments";
+import { useToast } from '../../components/ToastProvider';
 
 // Local fallback dataset used only when backend is unavailable
 const DUMMY: AppointmentDto[] = [
@@ -13,6 +14,7 @@ const DUMMY: AppointmentDto[] = [
 ];
 
 export default function Appointments() {
+  const toast = useToast();
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [typeFilter, setTypeFilter] = useState<string>("All");
   const [selected, setSelected] = useState<number | null>(null);
@@ -79,7 +81,7 @@ export default function Appointments() {
         return id === appointmentId ? { ...p, status } : p;
       }));
     } catch (err: any) {
-      alert('Failed to update appointment status: ' + (err?.message || String(err)));
+      toast.show('Failed to update appointment status: ' + (err?.message || String(err)), 'error');
     }
   };
 

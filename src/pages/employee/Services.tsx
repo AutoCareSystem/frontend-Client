@@ -5,10 +5,12 @@ import type { ServiceDto } from "../../api/services";
 import { fetchAppointmentServices } from "../../api/appointmentServices";
 import type { AppointmentServiceDto } from "../../api/appointmentServices";
 import { updateAppointmentStatus } from "../../api/appointments";
+import { useToast } from '../../components/ToastProvider';
 
 // No local dummy data: use backend catalog and appointment-services
 
 export default function Services() {
+  const toast = useToast();
   const [catalog, setCatalog] = useState<ServiceDto[] | null>(null);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
@@ -68,13 +70,43 @@ export default function Services() {
     return `${new Intl.NumberFormat().format(v)} LKR`;
   };
 
+  const getCustomerName = (a: any) => {
+    if (!a) return '—';
+    return (
+      a.customerName
+      ?? a.customer?.user?.normalizedUserName
+      ?? a.customer?.user?.userName
+      ?? a.customer?.userName
+      ?? a.user?.userName
+      ?? a.userName
+      ?? a.customer?.name
+      ?? ((a.customer?.firstName || a.customer?.lastName) ? `${a.customer?.firstName ?? ''} ${a.customer?.lastName ?? ''}`.trim() : undefined)
+      ?? a.customer?.user?.email
+      ?? a.customer?.email
+      ?? a.customerID
+      ?? '—'
+    );
+  };
+
+  const getCustomerEmail = (a: any) => {
+    if (!a) return '—';
+    return (
+      a.customerEmail
+      ?? a.customer?.user?.email
+      ?? a.user?.email
+      ?? a.email
+      ?? a.customer?.email
+      ?? '—'
+    );
+  };
+
   const filteredAppointments = useMemo(() => {
     if (!appointmentServices) return [] as AppointmentServiceDto[];
     return appointmentServices.filter(a => {
       if (apptStatusFilter !== 'All' && a.status !== apptStatusFilter) return false;
       if (apptOptionFilter !== 'All' && a.serviceOption !== apptOptionFilter) return false;
       if (query) {
-        const hay = `${a.customerName ?? ''} ${a.customerEmail ?? ''} ${a.vehicleInfo ?? ''}`.toLowerCase();
+        const hay = `${getCustomerName(a)} ${getCustomerEmail(a)} ${a.vehicleInfo ?? ''}`.toLowerCase();
         if (!hay.includes(query.toLowerCase())) return false;
       }
       return true;
@@ -91,7 +123,7 @@ export default function Services() {
         setSelectedAppointment(prev => prev ? { ...prev, status } : prev);
       }
     } catch (err: any) {
-      alert('Failed to update status: ' + (err?.message || String(err)));
+      toast.show('Failed to update status: ' + (err?.message || String(err)), 'error');
     }
   };
 
@@ -142,7 +174,7 @@ export default function Services() {
                     </button>
                     <button
                       disabled={deletingServiceId === c.serviceID}
-                      onClick={async () => {
+                        onClick={async () => {
                         if (!c.serviceID) return;
                         const ok = window.confirm(`Delete service "${c.title}"? This action cannot be undone.`);
                         if (!ok) return;
@@ -151,7 +183,7 @@ export default function Services() {
                           await deleteService(c.serviceID);
                           setCatalog(prev => prev ? prev.filter(s => s.serviceID !== c.serviceID) : prev);
                         } catch (err: any) {
-                          alert('Failed to delete service: ' + (err?.message || String(err)));
+                          toast.show('Failed to delete service: ' + (err?.message || String(err)), 'error');
                         } finally {
                           setDeletingServiceId(null);
                         }
@@ -212,7 +244,7 @@ export default function Services() {
                       setCatalog(prev => prev ? prev.map(s => s.serviceID === updated.serviceID ? updated : s) : prev);
                       setEditingServiceId(null);
                     } catch (err: any) {
-                      alert('Failed to update service: ' + (err?.message || String(err)));
+                      toast.show('Failed to update service: ' + (err?.message || String(err)), 'error');
                     } finally {
                       setSavingServiceId(null);
                     }
@@ -264,8 +296,8 @@ export default function Services() {
                   <div className="bg-[#2a2a2a] p-4 rounded border border-gray-700">
                     <div className="flex justify-between">
                       <div>
-                        <div className="font-semibold">{a.customerName}</div>
-                        <div className="text-sm text-gray-400">{a.customerEmail} • {a.vehicleInfo}</div>
+                        <div className="font-semibold">{getCustomerName(a)}</div>
+                        <div className="text-sm text-gray-400">{getCustomerEmail(a)} • {a.vehicleInfo}</div>
                         <div className="text-sm text-gray-400">{a.startDate ? new Date(a.startDate).toLocaleString() : a.time}</div>
                       </div>
                       <div className="text-right">
@@ -298,7 +330,7 @@ export default function Services() {
                   <div className="mt-6 bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
             <div className="flex justify-between items-start">
               <div>
-                        <h2 className="text-2xl font-semibold">Appointment — {selectedAppointment!.customerName}</h2>
+                        <h2 className="text-2xl font-semibold">Appointment - {getCustomerName(selectedAppointment)}</h2>
                         <div className="text-sm text-gray-300">{selectedAppointment!.startDate ? new Date(selectedAppointment!.startDate).toLocaleString() : selectedAppointment!.time}</div>
                         <div className="mt-3 text-gray-200">Vehicle: {selectedAppointment!.vehicleInfo}</div>
                         <div className="mt-2 text-gray-200">Assigned To: {selectedAppointment!.employeeName ?? 'Not Assigned'}</div>
@@ -313,7 +345,7 @@ export default function Services() {
                     <>
                       <button
                         onClick={() => {
-                          const uid = (typeof window !== 'undefined') ? (localStorage.getItem('employeeID') ?? localStorage.getItem('userID') ?? localStorage.getItem('userid') ?? localStorage.getItem('UserID')) : null;
+                          const uid = (typeof window !== 'undefined') ? (localStorage.getItem('EmployeeID') ?? localStorage.getItem('employeeID') ?? localStorage.getItem('userID') ?? localStorage.getItem('userid') ?? localStorage.getItem('UserID')) : null;
                           console.log('Approving appointment - UserID (from localStorage):', uid);
                           changeAppointmentStatus(selectedAppointment!.appointmentID, 'Approved');
                         }}

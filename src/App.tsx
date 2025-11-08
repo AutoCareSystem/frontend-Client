@@ -16,10 +16,12 @@ import UserManagement from "./pages/employee/UserManagement";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Home from "./pages/Home";
+import { ToastProvider } from './components/ToastProvider';
 
 export default function App() {
   return (
     <Router>
+      <ToastProvider>
       <Routes>
   {/* Auth */}
   <Route path="/" element={<Home />} />
@@ -42,6 +44,7 @@ export default function App() {
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />
       </Routes>
+      </ToastProvider>
     </Router>
   );
 }

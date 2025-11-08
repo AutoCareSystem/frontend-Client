@@ -7,6 +7,8 @@ type ProfileModel = {
   email: string;
   phone?: string;
   role?: string;
+  empNo?: string;
+  isActive?: boolean;
   createdAt?: string;
 };
 
@@ -63,23 +65,32 @@ export default function Profile() {
     let mounted = true;
     const uidFromStorage = localStorage.getItem('userId');
     const uid = uidFromStorage ? uidFromStorage : getUserIdFromToken();
-    if (!uid) {
+    // Allow forcing a specific employee id for testing via an env var
+    // or fall back to a hard-coded test id when no uid is present.
+    const forced = (import.meta as any).env?.VITE_FORCE_EMPLOYEE_ID || null;
+    const fallbackTestId = '3e5849d5-4730-46f2-99a1-a57c19afefe5';
+    const effectiveId = forced ?? uid ?? fallbackTestId;
+    if (!effectiveId) {
       setLoadError('No userId available. Please sign in.');
       return;
     }
-    setUserId(uid);
+    setUserId(effectiveId);
 
     const load = async () => {
       setLoading(true);
       try {
-        const data = await getEmployeeProfile(uid);
+        // Use the effective id so the request goes to:
+        // http://localhost:5093/api/Employees/{effectiveId}
+        const data = await getEmployeeProfile(effectiveId);
         if (!mounted) return;
         setProfile(p => ({
           ...p,
           name: data.name ?? p.name,
           email: data.email ?? p.email,
-          phone: data.phone ?? p.phone,
+          phone: data.phoneNumber ?? p.phone,
           role: data.position ?? p.role,
+          empNo: data.empNo ?? p.empNo,
+          isActive: typeof data.isActive === 'boolean' ? data.isActive : p.isActive,
           createdAt: p.createdAt,
         }));
       } catch (err: any) {
@@ -112,8 +123,16 @@ export default function Profile() {
     }
 
     setSaving(true);
-    try {
-      await updateEmployeeProfile(userId, { name: profile.name, phone: profile.phone, position: profile.role });
+      try {
+      await updateEmployeeProfile(userId, {
+        userName: profile.name,
+        email: profile.email,
+        phoneNumber: profile.phone ?? null,
+        position: profile.role ?? null,
+        empNo: profile.empNo ?? null,
+        // keep active as true when saving from UI; adjust if you want a toggle
+        isActive: profile.isActive ?? true,
+      });
       setMessage("Profile saved");
       setEditing(false);
     } catch (err: any) {

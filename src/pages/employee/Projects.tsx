@@ -2,6 +2,7 @@ import Sidebar from "../../components/Sidebar";
 import { useMemo, useState, useEffect } from "react";
 import { fetchProjects, type ProjectDto } from "../../api/projects";
 import { updateAppointmentStatus } from "../../api/appointments";
+import { useToast } from '../../components/ToastProvider';
 import { CalendarDays, Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,6 +18,7 @@ type ProjectItem = {
 };
 
 export default function Projects() {
+  const toast = useToast();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function Projects() {
       await updateAppointmentStatus(id, 'Approved');
       setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'Approved' } : p)));
     } catch (err: any) {
-      alert('Failed to approve project: ' + (err?.message || String(err)));
+      toast.show('Failed to approve project: ' + (err?.message || String(err)), 'error');
     }
   };
 
@@ -60,7 +62,7 @@ export default function Projects() {
       await updateAppointmentStatus(id, 'Rejected');
       setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'Rejected' } : p)));
     } catch (err: any) {
-      alert('Failed to reject project: ' + (err?.message || String(err)));
+      toast.show('Failed to reject project: ' + (err?.message || String(err)), 'error');
     }
   };
 
@@ -69,7 +71,7 @@ export default function Projects() {
       await updateAppointmentStatus(id, 'Completed');
       setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'Completed' } : p)));
     } catch (err: any) {
-      alert('Failed to complete project: ' + (err?.message || String(err)));
+      toast.show('Failed to complete project: ' + (err?.message || String(err)), 'error');
     }
   };
 
@@ -297,8 +299,9 @@ export default function Projects() {
                               onClick={() =>
                                 canApprove(p)
                                   ? approveProject(p.id)
-                                  : alert(
-                                      "Time conflict with an existing approved project."
+                                  : toast.show(
+                                      "Time conflict with an existing approved project.",
+                                      'warning'
                                     )
                               }
                               className="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-md text-sm"
@@ -430,9 +433,10 @@ export default function Projects() {
                                   onClick={() =>
                                     canApprove(selected)
                                       ? approveProject(selected.id)
-                                      : alert(
-                                          "Time conflict with existing approved project."
-                                        )
+                                        : toast.show(
+                                            "Time conflict with existing approved project.",
+                                            'warning'
+                                          )
                                   }
                                   className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md"
                                 >
