@@ -25,11 +25,12 @@ const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhos
  * Fetch appointments from backend with optional filters.
  * If backend is unavailable the function will reject and callers may fall back to a local dataset.
  */
-export async function fetchAppointments(params?: { type?: string; status?: string; q?: string }): Promise<AppointmentDto[]> {
+export async function fetchAppointments(params?: { type?: string; status?: string; q?: string; employeeId?: string }): Promise<AppointmentDto[]> {
   const query: string[] = [];
   if (params?.type) query.push(`type=${encodeURIComponent(params.type)}`);
   if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
   if (params?.q) query.push(`q=${encodeURIComponent(params.q)}`);
+  if (params?.employeeId) query.push(`employeeId=${encodeURIComponent(params.employeeId)}`);
   const qp = query.length ? `?${query.join('&')}` : '';
   const res = await axios.get(`${API_BASE}/api/Appointments${qp}`);
   if (!res || !Array.isArray(res.data)) throw new Error('Invalid response from appointments API');
@@ -100,7 +101,7 @@ export async function updateAppointmentStatus(
   appointmentId: number | string,
   status: string,
   employeeID?: string | null
-): Promise<void> {
+): Promise<any> {
   const userId = typeof window !== 'undefined' ? (localStorage.getItem('UserId') ?? localStorage.getItem('UserID') ?? localStorage.getItem('userid')) : null;
     const headers: Record<string, string> = {};
     // Send multiple common header variants so different backend expectations are met
@@ -129,6 +130,12 @@ export async function updateAppointmentStatus(
   if (!emp) {
     throw new Error('employeeID is required to update appointment status. Set localStorage.employeeID or pass employeeID to the helper.');
   }
+  // Include employee id in headers as some backends expect it there
+  headers['EmployeeID'] = emp as string;
+  headers['X-Employee-ID'] = emp as string;
+  headers['x-employee-id'] = emp as string;
+  headers['employeeid'] = emp as string;
+
   const body: any = { appointmentID: idNumber, employeeID: emp };
 
   const url = `${API_BASE}/api/Appointments/${idNumber}/${action}`;
@@ -136,10 +143,10 @@ export async function updateAppointmentStatus(
   try {
     // eslint-disable-next-line no-console
     console.debug('[updateAppointmentStatus] PUT', url, { headers, body });
-    const res = await axios.put(url, body, { headers });
-    // eslint-disable-next-line no-console
-    console.debug('[updateAppointmentStatus] response', res.status, res.data);
-    return;
+  const res = await axios.put(url, body, { headers });
+  // eslint-disable-next-line no-console
+  console.debug('[updateAppointmentStatus] response', res.status, res.data);
+  return res.data;
   } catch (err: any) {
     // Log full response for easier debugging
     // eslint-disable-next-line no-console
@@ -151,4 +158,15 @@ export async function updateAppointmentStatus(
     }
     throw err;
   }
+}
+
+/**
+ * Fetch a single appointment by id (detailed payload).
+ * Use this from list views when the user requests to view an appointment's full data.
+ */
+export async function fetchAppointmentById(appointmentId: number | string): Promise<any> {
+  const id = typeof appointmentId === 'string' ? appointmentId : String(appointmentId);
+  const res = await axios.get(`${API_BASE}/api/Appointments/${encodeURIComponent(id)}`);
+  if (!res) throw new Error('Invalid response from appointments API');
+  return res.data;
 }

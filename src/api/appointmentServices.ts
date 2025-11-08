@@ -94,6 +94,17 @@ export async function fetchAppointmentServices(): Promise<AppointmentServiceDto[
     const axios = (await import('axios')).default;
     const res = await axios.get(`${base}/api/Appointments/service`);
     if (res && Array.isArray(res.data)) {
+      // Debug: log first item so dev can inspect raw payload in browser console
+      try {
+        // only log in development to avoid noisy production logs
+        if ((import.meta as any).env?.MODE !== 'production') {
+          // eslint-disable-next-line no-console
+          console.debug('[fetchAppointmentServices] sample response item:', res.data[0]);
+        }
+      } catch (__) {
+        // ignore logging errors
+      }
+
       return res.data.map((s: any) => ({
         appointmentID: s.appointmentID ?? s.appointmentId ?? s.id,
         // customer name fallbacks: direct field, nested user, or common customer object shapes
