@@ -48,19 +48,19 @@ export default function NewCustomerDashboard() {
     setError(null);
 
     try {
-      console.log("🔄 Fetching dashboard data for customer:", customerId);
+      console.log("Fetching dashboard data for customer:", customerId);
 
       // 1. Fetch customer profile
       const profileData = await customerAPI.getProfile(customerId);
       if (profileData) {
         setCustomerProfile(profileData);
-        console.log("✅ Profile loaded:", profileData);
+        console.log("Profile loaded:", profileData);
       }
 
       // 2. Fetch customer vehicles
       const vehiclesData = await customerAPI.getVehicles(customerId);
       setVehicles(vehiclesData);
-      console.log("✅ Vehicles loaded:", vehiclesData);
+      console.log("Vehicles loaded:", vehiclesData);
 
       // 3. For each vehicle, fetch summary and service history
       if (vehiclesData.length > 0) {
@@ -77,7 +77,7 @@ export default function NewCustomerDashboard() {
             if (summaryData) {
               summaries[vehicle.vehicleID] = summaryData;
               console.log(
-                `✅ Summary for vehicle ${vehicle.vehicleID}:`,
+                `Summary for vehicle ${vehicle.vehicleID}:`,
                 summaryData
               );
             }
@@ -85,7 +85,7 @@ export default function NewCustomerDashboard() {
             if (historyData) {
               histories[vehicle.vehicleID] = historyData;
               console.log(
-                `✅ History for vehicle ${vehicle.vehicleID}:`,
+                `History for vehicle ${vehicle.vehicleID}:`,
                 historyData
               );
             }
@@ -99,9 +99,9 @@ export default function NewCustomerDashboard() {
       // 4. Fetch available services
       const servicesData = await customerAPI.getServices();
       setAvailableServices(servicesData);
-      console.log("✅ Services loaded:", servicesData);
+      console.log("Services loaded:", servicesData);
     } catch (err) {
-      console.error("❌ Dashboard fetch error:", err);
+      console.error("Dashboard fetch error:", err);
       setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);

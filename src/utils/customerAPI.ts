@@ -193,11 +193,11 @@ export const utils = {
 
     // If stored ID is invalid, clear it and use fallback
     if (storedId && invalidIds.includes(storedId)) {
-      console.log(`⚠️ Clearing invalid customer ID: ${storedId}`);
+      console.log(`Clearing invalid customer ID: ${storedId}`);
       localStorage.removeItem("customerId");
       localStorage.removeItem("customerID");
       const fallbackId = "60ac7690-236e-4a55-8ace-ccc3e456cfc0"; // samasha@gmail.com
-      console.log(`✅ Using fallback customer ID: ${fallbackId}`);
+      console.log(`Using fallback customer ID: ${fallbackId}`);
       return fallbackId;
     }
 
@@ -206,7 +206,7 @@ export const utils = {
       import.meta.env.VITE_CUSTOMER_ID ||
       "60ac7690-236e-4a55-8ace-ccc3e456cfc0"; // samasha@gmail.com
 
-    console.log(`🔑 Customer ID resolved: ${customerId}`);
+    console.log(`Customer ID resolved: ${customerId}`);
     return customerId;
   },
 

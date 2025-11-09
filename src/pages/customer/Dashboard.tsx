@@ -48,7 +48,7 @@ export default function CustomerDashboard() {
 
   // Fetch actual data from API
   useEffect(() => {
-    console.log("🔄 useEffect triggered - dependencies changed!");
+    console.log("useEffect triggered - dependencies changed!");
     const fetchDashboardData = async () => {
       setLoading(true); // Set loading to true at start
       try {
@@ -57,15 +57,15 @@ export default function CustomerDashboard() {
         const serviceApiUrl = "http://localhost:5292"; // Service Management API
 
         console.log(
-          "📊 Fetching data for Customer:",
+          "Fetching data for Customer:",
           customerId,
           "Vehicle:",
           vehicleId
         );
-        console.log("🔗 Auth API URL:", authApiUrl);
-        console.log("🔗 Service API URL:", serviceApiUrl);
+        console.log("Auth API URL:", authApiUrl);
+        console.log("Service API URL:", serviceApiUrl);
         console.log(
-          "🌐 Full endpoint:",
+          "Full endpoint:",
           `${serviceApiUrl}/api/Appointments/customer/${customerId}/vehicle/${vehicleId}/summary`
         );
 
@@ -76,7 +76,7 @@ export default function CustomerDashboard() {
 
         if (!summaryResponse.ok) {
           console.error(
-            "❌ API Error:",
+            "API Error:",
             summaryResponse.status,
             summaryResponse.statusText
           );
@@ -84,7 +84,7 @@ export default function CustomerDashboard() {
         }
 
         const summaryData: DashboardSummary = await summaryResponse.json();
-        console.log("✅ Summary Data Received:", summaryData);
+        console.log("Summary Data Received:", summaryData);
         setDashboardData(summaryData);
 
         // Fetch appointments list from Service Management API
@@ -99,17 +99,17 @@ export default function CustomerDashboard() {
           const customerAppointments = allAppointments.filter(
             (apt) => apt.customerID === customerId
           );
-          console.log("✅ Appointments Received:", customerAppointments);
+          console.log("Appointments Received:", customerAppointments);
           setAppointments(customerAppointments);
         } else {
           console.warn(
-            "⚠️ Appointments API returned:",
+            "Appointments API returned:",
             appointmentsResponse.status
           );
         }
       } catch (err) {
-        console.error(" Dashboard data error:", err);
-        console.warn(" Using fallback mock data");
+        console.error("Dashboard data error:", err);
+        console.warn("Using fallback mock data");
         // Fallback to mock data
         setDashboardData({
           totalSpent: 20067,
