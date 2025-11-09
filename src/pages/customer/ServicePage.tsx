@@ -3,7 +3,7 @@ import { Wrench } from 'lucide-react';
 import ServiceCard from '../../components/customer/ServiceCard';
 import BookingSummary from '../../components/customer/BookingSummary';
 import Sidebar from '../../components/Sidebar';
-import { getServices } from '../../api/services';
+import { fetchServices } from '../../api/services';
 import type { Service } from '../../api/services';
 import { createAppointment, getCustomerAppointments, type Appointment } from '../../api/appointments';
 import type { AppointmentDto } from '../../api/appointments';
@@ -46,9 +46,9 @@ const ServicePage: React.FC = () => {
 
   // Fetch services from API
   useEffect(() => {
-    const fetchServices = async () => {
+    const loadServices = async () => {
       try {
-        const data = await getServices();
+        const data = await fetchServices();
         const mapped: Service[] = data.map(s => ({
           serviceID: s.serviceID,
           name: s.title,
@@ -65,7 +65,7 @@ const ServicePage: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchServices();
+    loadServices();
   }, []);
 
   // Fetch existing appointments/bookings from backend
