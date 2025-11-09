@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../components/Sidebar";
+import { LogOut } from "lucide-react";
 import RealTimeTracking from "../../components/RealTimeTracking";
 import ServiceHistory from "../../components/ServiceHistory";
 import ActivityFeed from "../../components/ActivityFeed";
@@ -32,6 +35,9 @@ interface Appointment {
 }
 
 export default function CustomerDashboard() {
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(
     null
   );
@@ -176,6 +182,11 @@ export default function CustomerDashboard() {
             cost: `$${apt.totalPrice || apt.cost || 0}`,
           }))
       : [];
+
+  const handleLogout = () => {
+    logout(); // Clear user data and tokens
+    navigate("/login"); // Redirect to login page
+  };
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
