@@ -74,6 +74,7 @@ export default function App() {
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ToastProvider>
       <ChatbotButton />
       </div>
       </ToastProvider>
