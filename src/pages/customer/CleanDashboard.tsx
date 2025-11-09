@@ -17,6 +17,7 @@ import {
   type VehicleSummary,
   type ServiceHistoryItem,
   type Service,
+  type Project,
 } from "../../utils/customerAPI";
 
 export default function NewCustomerDashboard() {
@@ -35,6 +36,7 @@ export default function NewCustomerDashboard() {
     Record<number, ServiceHistoryItem[]>
   >({});
   const [availableServices, setAvailableServices] = useState<Service[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const customerId = utils.getCustomerId();
 
@@ -48,19 +50,19 @@ export default function NewCustomerDashboard() {
     setError(null);
 
     try {
-      console.log("Fetching dashboard data for customer:", customerId);
+      console.log("🔄 Fetching dashboard data for customer:", customerId);
 
       // 1. Fetch customer profile
       const profileData = await customerAPI.getProfile(customerId);
       if (profileData) {
         setCustomerProfile(profileData);
-        console.log("Profile loaded:", profileData);
+        console.log("✅ Profile loaded:", profileData);
       }
 
       // 2. Fetch customer vehicles
       const vehiclesData = await customerAPI.getVehicles(customerId);
       setVehicles(vehiclesData);
-      console.log("Vehicles loaded:", vehiclesData);
+      console.log("✅ Vehicles loaded:", vehiclesData);
 
       // 3. For each vehicle, fetch summary and service history
       if (vehiclesData.length > 0) {
@@ -77,7 +79,7 @@ export default function NewCustomerDashboard() {
             if (summaryData) {
               summaries[vehicle.vehicleID] = summaryData;
               console.log(
-                `Summary for vehicle ${vehicle.vehicleID}:`,
+                `✅ Summary for vehicle ${vehicle.vehicleID}:`,
                 summaryData
               );
             }
@@ -85,7 +87,7 @@ export default function NewCustomerDashboard() {
             if (historyData) {
               histories[vehicle.vehicleID] = historyData;
               console.log(
-                `History for vehicle ${vehicle.vehicleID}:`,
+                `✅ History for vehicle ${vehicle.vehicleID}:`,
                 historyData
               );
             }
@@ -99,9 +101,14 @@ export default function NewCustomerDashboard() {
       // 4. Fetch available services
       const servicesData = await customerAPI.getServices();
       setAvailableServices(servicesData);
-      console.log("Services loaded:", servicesData);
+      console.log("✅ Services loaded:", servicesData);
+
+      // 5. Fetch customer projects
+      const projectsData = await customerAPI.getProjects(customerId);
+      setProjects(projectsData);
+      console.log("✅ Projects loaded:", projectsData);
     } catch (err) {
-      console.error("Dashboard fetch error:", err);
+      console.error("❌ Dashboard fetch error:", err);
       setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
@@ -492,6 +499,69 @@ export default function NewCustomerDashboard() {
                     Book Service
                   </button>
                 )}
+              </div>
+
+              {/* Customer Projects */}
+              <div className="bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
+                <h2 className="text-xl font-bold text-white mb-6">
+                  My Custom Projects
+                </h2>
+
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {projects.map((project) => (
+                    <div
+                      key={project.appointmentID}
+                      className="p-4 bg-[#1a1a1a] rounded-lg hover:bg-gray-700/20 transition border border-gray-600"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-white font-medium">
+                            {project.projectTitle}
+                          </h3>
+                          <p className="text-gray-400 text-xs mt-1">
+                            {project.projectDescription}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${utils.getStatusColor(
+                            project.status
+                          )}`}
+                        >
+                          {project.status}
+                        </span>
+                      </div>
+
+                      {project.vehicle && (
+                        <div className="flex items-center space-x-2 text-xs text-gray-400 mt-2">
+                          <Car className="h-3 w-3" />
+                          <span>
+                            {project.vehicle.company} {project.vehicle.model} (
+                            {project.vehicle.year})
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-600">
+                        <div className="text-xs text-gray-400">
+                          <span>Assigned to: </span>
+                          <span className="text-blue-400">
+                            {project.assignedEmployee}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {utils.formatDate(project.startDate)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {projects.length === 0 && (
+                    <div className="text-center py-8">
+                      <AlertCircle className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                      <p className="text-gray-400">No custom projects yet</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

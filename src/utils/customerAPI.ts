@@ -47,6 +47,26 @@ export interface Service {
   status: string;
 }
 
+export interface Project {
+  appointmentID: number;
+  customerID: string;
+  vehicleID: number;
+  vehicle: {
+    vehicleID: number;
+    company: string;
+    model: string;
+    year: string;
+    plateNumber: string;
+  } | null;
+  projectTitle: string;
+  projectDescription: string;
+  status: string;
+  startDate: string;
+  endDate: string | null;
+  time: string;
+  assignedEmployee: string;
+}
+
 // API functions
 export const customerAPI = {
   // Get customer profile
@@ -143,6 +163,23 @@ export const customerAPI = {
       return [];
     } catch (error) {
       console.error("Error fetching services:", error);
+      return [];
+    }
+  },
+
+  // Get customer projects
+  getProjects: async (customerId: string): Promise<Project[]> => {
+    try {
+      const response = await fetch(
+        `${SERVICE_API_URL}/api/Projects/customer/${customerId}`
+      );
+      if (response.ok) {
+        return await response.json();
+      }
+      console.warn("Failed to fetch projects:", response.status);
+      return [];
+    } catch (error) {
+      console.error("Error fetching projects:", error);
       return [];
     }
   },
