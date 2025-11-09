@@ -8,9 +8,11 @@ import { AuthProvider } from './context/AuthContext'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MockDataProvider>
+  
       <AuthProvider>
         <App />
-      </AuthProvider>
+      
+    </AuthProvider>
     </MockDataProvider>
   </StrictMode>,
 )

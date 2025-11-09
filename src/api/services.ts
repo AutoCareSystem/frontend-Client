@@ -12,6 +12,14 @@ export type ServiceDto = {
 };
 
 
+
+
+/**
+ * Fetch services from backend API. This function will throw if the request fails
+ * so callers can show an explicit error state. The frontend no longer ships a
+ * built-in mock catalog — the app expects the backend to provide the service list.
+ */
+
 const toString = (v: any) => {
   if (v == null) return undefined;
   if (typeof v === 'string') return v;
