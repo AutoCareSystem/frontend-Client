@@ -1,36 +1,64 @@
-import axios from "axios";
+import axios from 'axios';
 
 export type ProjectDto = {
-  appointmentId?: number; // backend might return appointment-based DTOs
-  id?: number;
-  projectTitle?: string;
-  projectDescription?: string | null;
-  start?: string;
-  end?: string;
-  CustomerName?: string;
+  appointmentID?: number;
+  customerDisplay?: string;
+  vehiclePlate?: string;
+  startDate?: string;
+  endDate?: string | null;
   status?: string;
+  projectTitle?: string;
+  projectDescription?: string;
+  totalPrice?: number | null;
+  raw?: any;
+};
+
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5292';
+
+const toString = (v: any) => {
+  if (v == null) return undefined;
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (typeof v === 'object') {
+    if (v.fullName) return v.fullName;
+    if (v.name) return v.name;
+    if (v.customerName) return v.customerName;
+    const maybeFirstLast = `${v.firstName ?? ''} ${v.lastName ?? ''}`.trim();
+    if (maybeFirstLast) return maybeFirstLast;
+    try { return JSON.stringify(v); } catch { return String(v); }
+  }
+  return String(v);
 };
 
 export async function fetchProjects(): Promise<ProjectDto[]> {
-  const base = (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5292";
-  // allow alternate port commonly used by other services
-  const normalized = base.replace(/\/+$/g, '');
-  // try the configured base first, but client can call different backend ports if needed
-  const urls = [
-    `${normalized}/api/projects`,
-    // fallback attempt to common alternate port where project service may run
-    `${normalized.replace(/:\d+$/, '')}:5292/api/projects`,
-  ];
+  const res = await axios.get(`${API_BASE}/api/Projects`);
+  if (!res || !Array.isArray(res.data)) throw new Error('Invalid response from projects API');
 
-  for (const url of urls) {
-    try {
-      const res = await axios.get(url);
-      if (res?.data) return res.data as ProjectDto[];
-    } catch (e) {
-      // try next
-    }
-  }
+  return res.data.map((p: any) => {
+    const customerDisplay = toString(
+      p.customer?.user?.normalizedUserName ??
+        p.customer?.user?.userName ??
+        p.customer?.user?.fullName ??
+        p.customer?.userName ??
+        p.customer?.customerName ??
+        p.customer?.customerFullName
+    );
+    const vehiclePlate = toString(p.vehicle?.plateNumber ?? p.vehicle?.plate ?? p.vehicle?.plateNo);
+    const projectTitle = toString(p.projectDetails?.projectTitle ?? p.projectDetails?.title ?? p.projectTitle ?? p.title);
+    const projectDescription = toString(p.projectDetails?.projectDescription ?? p.projectDetails?.description ?? p.projectDescription ?? p.description);
 
-  // If all attempts fail, throw so callers can fallback to local data
-  throw new Error("Failed to fetch projects from backend");
+    return {
+      appointmentID: p.appointmentID,
+      customerDisplay: customerDisplay ?? undefined,
+      vehiclePlate: vehiclePlate ?? undefined,
+      startDate: toString(p.startDate ?? p.start_time ?? p.start) ?? undefined,
+      endDate: toString(p.endDate ?? p.end_time ?? null) ?? undefined,
+      status: toString(p.status) ?? undefined,
+      projectTitle: projectTitle ?? undefined,
+      projectDescription: projectDescription ?? undefined,
+      totalPrice: p.totalPrice ?? p.total_price ?? p.price ?? null,
+      raw: p,
+    } as ProjectDto;
+  });
 }
+

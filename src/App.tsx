@@ -26,6 +26,8 @@ import UserManagement from "./pages/employee/UserManagement";
 // Auth Pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import Home from "./pages/Home";
+import { ToastProvider } from './components/ToastProvider';
 
 // 404 Page Component
 function NotFound() {
@@ -39,14 +41,16 @@ export default function App() {
 
   return (
     <Router>
+      <ToastProvider>
       <div className="relative">
         <Routes>
           {/* Default redirect based on localStorage Role */}
         <Route path="/" element={<Navigate to={defaultRedirect} replace />} />
 
-        {/* Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+  {/* Auth */}
+  <Route path="/" element={<Home />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/signup" element={<Signup />} />
 
         {/* Customer Routes */}
         <Route path="/customer/dashboard" element={<CleanDashboard />} />
@@ -70,6 +74,7 @@ export default function App() {
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ToastProvider>
       <ChatbotButton />
       </div>
     </Router>
