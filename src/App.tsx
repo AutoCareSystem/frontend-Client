@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import CustomerDashboard from "./pages/customer/Dashboard";
+import CleanDashboard from "./pages/customer/CleanDashboard";
 import BookAppointment from "./pages/customer/BookAppointment";
 import Modifications from "./pages/customer/Modifications";
 import Chatbot from "./pages/customer/Chatbot";
@@ -30,7 +31,8 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
 
         {/* Customer Routes */}
-        <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+        <Route path="/customer/dashboard" element={<CleanDashboard />} />
+        <Route path="/customer/dashboard-old" element={<CustomerDashboard />} />
         <Route path="/customer/appointments" element={<BookAppointment />} />
         <Route path="/customer/modifications" element={<Modifications />} />
         <Route path="/customer/chatbot" element={<Chatbot />} />
