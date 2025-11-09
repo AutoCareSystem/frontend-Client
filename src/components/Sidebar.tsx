@@ -6,11 +6,12 @@ import {
   User,
   Calendar,
   MessageCircle,
-  LogOut,
+  LogOut, Users,
 } from "lucide-react";
+import { Wrench } from "lucide-react";
 
 interface SidebarProps {
-  role: "customer" | "employee";
+  role: "Customer" | "Employee";
 }
 
 export default function Sidebar({ role }: SidebarProps) {
@@ -33,9 +34,9 @@ export default function Sidebar({ role }: SidebarProps) {
       icon: <Folder size={20} />,
     },
     {
-      name: "Chatbot",
-      path: "/customer/chatbot",
-      icon: <MessageCircle size={20} />,
+      name: "Profile",
+      path: "/customer/profile",
+      icon: <User size={20} />,
     },
   ];
 
@@ -55,6 +56,8 @@ export default function Sidebar({ role }: SidebarProps) {
       path: "/employee/projects",
       icon: <Folder size={20} />,
     },
+  { name: "Services", path: "/employee/services", icon: <Wrench size={20} /> },
+  { name: "Users", path: "/employee/users", icon: <Users size={20} /> },
     {
       name: "Appointments",
       path: "/employee/appointments",
@@ -63,7 +66,7 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Profile", path: "/employee/profile", icon: <User size={20} /> },
   ];
 
-  const menuItems = role === "customer" ? customerMenu : employeeMenu;
+  const menuItems = role === "Customer" ? customerMenu : employeeMenu;
 
   return (
     <aside className="h-screen w-64 bg-[#0a0a0a] text-gray-100 flex flex-col shadow-lg">
