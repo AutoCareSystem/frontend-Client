@@ -14,6 +14,7 @@ interface DashboardSummary {
 interface Appointment {
   id: number;
   appointmentID?: number;
+  customerID?: string;
   serviceName?: string;
   status:
     | "Completed"
@@ -39,8 +40,11 @@ export default function CustomerDashboard() {
 
   // Get initial values from .env (priority) or localStorage
   // Force use of .env values for real data
-  const customerId = import.meta.env.VITE_CUSTOMER_ID || localStorage.getItem("customerId") || "f003b7d9-eefe-4cb6-8f87-06ff62c54d8a";
-  const vehicleId = import.meta.env.VITE_VEHICLE_ID || localStorage.getItem("vehicleId") || "1";
+  const customerId =
+    
+    localStorage.getItem("customerId") ;
+  const vehicleId =
+    localStorage.getItem("vehicleId") ;
 
   // Fetch actual data from API
   useEffect(() => {
@@ -48,7 +52,9 @@ export default function CustomerDashboard() {
     const fetchDashboardData = async () => {
       setLoading(true); // Set loading to true at start
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+        const authApiUrl =
+          import.meta.env.VITE_API_URL || "http://localhost:5093";
+        const serviceApiUrl = "http://localhost:5292"; // Service Management API
 
         console.log(
           "📊 Fetching data for Customer:",
@@ -56,20 +62,21 @@ export default function CustomerDashboard() {
           "Vehicle:",
           vehicleId
         );
-        console.log("🔗 API URL:", apiUrl);
+        console.log("🔗 Auth API URL:", authApiUrl);
+        console.log("🔗 Service API URL:", serviceApiUrl);
         console.log(
           "🌐 Full endpoint:",
-          `${apiUrl}/api/Appointments/customer/${customerId}/vehicle/${vehicleId}/summary`
+          `${serviceApiUrl}/api/Appointments/customer/${customerId}/vehicle/${vehicleId}/summary`
         );
 
-        // Fetch summary data
+        // Fetch summary data from Service Management API
         const summaryResponse = await fetch(
-          `${apiUrl}/api/Appointments/customer/${customerId}/vehicle/${vehicleId}/summary`
+          `${serviceApiUrl}/api/Appointments/customer/${customerId}/vehicle/${vehicleId}/summary`
         );
 
         if (!summaryResponse.ok) {
           console.error(
-            " API Error:",
+            "❌ API Error:",
             summaryResponse.status,
             summaryResponse.statusText
           );
@@ -77,24 +84,26 @@ export default function CustomerDashboard() {
         }
 
         const summaryData: DashboardSummary = await summaryResponse.json();
-        console.log(" Summary Data Received:", summaryData);
+        console.log("✅ Summary Data Received:", summaryData);
         setDashboardData(summaryData);
 
-        // Fetch appointments list
+        // Fetch appointments list from Service Management API
         const appointmentsResponse = await fetch(
-          `${
-            import.meta.env.VITE_API_URL || "http://localhost:5000"
-          }/api/Appointments/customer/${customerId}`
+          `${serviceApiUrl}/api/Appointments`
         );
 
         if (appointmentsResponse.ok) {
-          const appointmentsData: Appointment[] =
+          const allAppointments: Appointment[] =
             await appointmentsResponse.json();
-          console.log(" Appointments Received:", appointmentsData);
-          setAppointments(appointmentsData);
+          // Filter appointments for this customer
+          const customerAppointments = allAppointments.filter(
+            (apt) => apt.customerID === customerId
+          );
+          console.log("✅ Appointments Received:", customerAppointments);
+          setAppointments(customerAppointments);
         } else {
           console.warn(
-            " Appointments API returned:",
+            "⚠️ Appointments API returned:",
             appointmentsResponse.status
           );
         }
