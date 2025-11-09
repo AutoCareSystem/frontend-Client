@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import { BarChart2, CalendarDays, ClipboardList, Users } from "lucide-react";
 import SimpleBarChart from "../../components/charts/SimpleBarChart";
@@ -16,7 +16,7 @@ type MiniStat = { title: string; value: number; icon?: any; color?: string; subt
 
 export default function EmployeeDashboard() {
   const toast = useToast();
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);

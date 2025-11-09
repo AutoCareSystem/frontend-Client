@@ -3,6 +3,7 @@
 ## 🚀 Fastest Method (Recommended)
 
 ### Step 1: Push Your Branch
+
 ```bash
 git checkout frontendIntegration
 git push origin frontendIntegration
@@ -33,6 +34,7 @@ If you've already deployed from main/master:
 ### Method 2: Manual Deployment from Dashboard
 
 1. Push your branch:
+
    ```bash
    git push origin frontendIntegration
    ```
@@ -60,6 +62,7 @@ vercel --prod
 ```
 
 Or explicitly specify the branch:
+
 ```bash
 vercel --prod --branch frontendIntegration
 ```
@@ -69,6 +72,7 @@ vercel --prod --branch frontendIntegration
 ## ✅ Verify Deployment
 
 After deployment, check:
+
 - **Production URL:** `https://your-project.vercel.app`
 - **Deployment Status:** Green checkmark in Vercel dashboard
 - **Build Logs:** Check for any errors in the deployment logs
@@ -78,6 +82,7 @@ After deployment, check:
 ## 🔄 Continuous Deployment
 
 Once configured, every push to `frontendIntegration` will automatically:
+
 - Trigger a new production deployment (if set as production branch)
 - Or create a preview deployment (if not set as production)
 
@@ -86,15 +91,23 @@ Once configured, every push to `frontendIntegration` will automatically:
 ## 🆘 Troubleshooting
 
 **Branch not showing in Vercel?**
+
 - Make sure the branch is pushed to your Git repository
 - Refresh the Vercel dashboard
 
 **Build fails?**
+
 - Check build logs in Vercel dashboard
 - Ensure all dependencies are in `package.json`
 - Verify `vercel.json` configuration
 
 **Wrong branch deployed?**
-- Go to Settings → Git → Change Production Branch
+
+- Go to Settings → Git → Change Production Branch from `main` to `frontendIntegration`
+- Save changes - Vercel will automatically redeploy
 - Or manually create deployment from correct branch
 
+**Vercel keeps deploying main branch?**
+
+- This is a common issue! See `FIX_VERCEL_BRANCH.md` for detailed steps
+- Quick fix: Settings → Git → Production Branch → Change to `frontendIntegration` → Save
