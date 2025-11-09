@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { getEmployeeProfile } from "../../api/profile";
+import { fetchProjects } from "../../api/projects";
+import { fetchServices } from "../../api/services";
+import type { EmployeeProfileDto } from "../../api/profile";
 
 type MiniStat = { title: string; value: number; icon?: ReactNode };
 
@@ -17,25 +21,77 @@ import EmployeePerformance from "../../components/EmployeePerformance";
 import { Bell, Settings } from "lucide-react";
 
 export default function EmployeeDashboard() {
-  const quickStats: MiniStat[] = [
-    { title: "Active Assignments", value: 3, color: "text-blue-500" },
-    { title: "Completed Today", value: 2, color: "text-green-500" },
-    { title: "Hours Logged", value: "8.5h", color: "text-red-500" },
-    { title: "Upcoming Services", value: 2 },
+  const [profile, setProfile] = useState<EmployeeProfileDto | null>(null);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // derived stats
+  const stats: MiniStat[] = [
+    { title: "Active Projects", value: projects.length },
+    { title: "Total Appointments", value: profile?.totalAppointments ?? 0 },
+    { title: "Completed Appointments", value: profile?.completedAppointments ?? 0 },
+    { title: "Upcoming Services", value: profile?.recentAppointments ? profile.recentAppointments.filter((r: any) => r.appointmentType?.toLowerCase?.() === 'service').length : 0 },
   ];
 
-  const [appointments] = useState<Appointment[]>([
-    { id: 1, customer: "John Doe", start: "2025-11-12T09:00:00Z", end: "2025-11-12T11:00:00Z", status: "Pending" },
-    { id: 2, customer: "Alice Smith", start: "2025-11-12T12:00:00Z", end: "2025-11-12T13:30:00Z", status: "Approved" },
-    { id: 3, customer: "Sam Turner", start: "2025-11-13T08:30:00Z", end: "2025-11-13T09:30:00Z", status: "Pending" },
-  ]);
+  const upcoming = useMemo(() => (profile?.recentAppointments ?? []).slice(0, 5), [profile]);
 
-  const [pendingServices] = useState([
-    { id: 1, customer: "John Doe", type: "Full", start: "2025-11-12T09:00:00Z" },
-    { id: 3, customer: "Sam Turner", type: "Custom", start: "2025-11-13T08:30:00Z" },
-  ]);
+  // derive pending services from recent appointments (backend shape may vary)
+  const pendingServices = useMemo(() => {
+    const items = profile?.recentAppointments ?? [];
+    return items.filter((r: any) => (r.appointmentType?.toLowerCase?.() === 'service' || (r.AppointmentType && String(r.AppointmentType).toLowerCase() === 'service')) && (String(r.status || r.Status || '').toLowerCase() === 'pending'));
+  }, [profile]);
 
-  const upcoming = useMemo(() => appointments.slice(0, 5), [appointments]);
+  useEffect(() => {
+    let mounted = true;
+
+    function getUserIdFromToken(): string | null {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return null;
+        const parts = token.split('.');
+        if (parts.length < 2) return null;
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const id = payload.userId ?? payload.userID ?? payload.sub ?? payload.nameid ?? null;
+        return id == null ? null : String(id);
+      } catch {
+        return null;
+      }
+    }
+
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const uidFromStorage = localStorage.getItem('userId');
+        const uid = uidFromStorage ? uidFromStorage : getUserIdFromToken();
+        if (!uid) {
+          throw new Error('No userId available. Please sign in.');
+        }
+
+        const [prof, projs, servs] = await Promise.all([
+          getEmployeeProfile(uid),
+          fetchProjects().catch(() => []),
+          fetchServices().catch(() => []),
+        ]);
+
+        if (!mounted) return;
+        setProfile(prof as EmployeeProfileDto);
+        setProjects(projs ?? []);
+        setServices(servs ?? []);
+      } catch (err: any) {
+        if (!mounted) return;
+        setError(err?.message || 'Failed to load dashboard data');
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    };
+
+    load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
@@ -105,34 +161,46 @@ export default function EmployeeDashboard() {
           <div className="lg:col-span-2 bg-[#2a2a2a] p-6 rounded-xl border border-gray-700">
             <h2 className="text-xl font-semibold mb-4">Upcoming Appointments</h2>
             <ul className="space-y-3">
-              {upcoming.map(a => (
-                <li key={a.id} className="flex items-center justify-between p-3 bg-[#161616] rounded">
-                  <div>
-                    <div className="font-medium">{a.customer}</div>
-                    <div className="text-sm text-gray-400">{new Date(a.start).toLocaleString()} - {new Date(a.end).toLocaleString()}</div>
-                  </div>
-                  <div className="text-sm">
-                    <span className={`px-2 py-1 rounded text-xs ${a.status === 'Pending' ? 'bg-yellow-600 text-black' : a.status === 'Approved' ? 'bg-green-600' : 'bg-gray-600'}`}>{a.status}</span>
-                  </div>
-                </li>
-              ))}
+              {upcoming.map((a: any, idx: number) => {
+                const customerName = a.customerName || a.CustomerName || (a.customer && a.customer.user && a.customer.user.name) || 'Unknown';
+                const dateStr = a.date || a.Date || a.startDate || a.start || null;
+                const endStr = a.endDate || a.EndDate || a.end || null;
+                const status = a.status || a.Status || 'Pending';
+
+                return (
+                  <li key={a.appointmentID ?? a.AppointmentID ?? idx} className="flex items-center justify-between p-3 bg-[#161616] rounded">
+                    <div>
+                      <div className="font-medium">{customerName}</div>
+                      <div className="text-sm text-gray-400">{dateStr ? `${new Date(dateStr).toLocaleString()}${endStr ? ' - ' + new Date(endStr).toLocaleString() : ''}` : 'No date'}</div>
+                    </div>
+                    <div className="text-sm">
+                      <span className={`px-2 py-1 rounded text-xs ${String(status).toLowerCase() === 'pending' ? 'bg-yellow-600 text-black' : String(status).toLowerCase() === 'approved' ? 'bg-green-600' : 'bg-gray-600'}`}>{status}</span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
           <div className="bg-[#2a2a2a] p-6 rounded-xl border border-gray-700">
             <h2 className="text-xl font-semibold mb-4">Pending Services</h2>
             <ul className="space-y-3">
-              {pendingServices.map(s => (
-                <li key={s.id} className="flex items-center justify-between p-3 bg-[#161616] rounded">
-                  <div>
-                    <div className="font-medium">{s.customer}</div>
-                    <div className="text-sm text-gray-400">{s.type} • {new Date(s.start).toLocaleString()}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Link to="/employee/services" className="text-sm bg-green-600 px-2 py-1 rounded">View</Link>
-                  </div>
-                </li>
-              ))}
+              {pendingServices.map((s: any, i: number) => {
+                const customerName = s.customerName || s.CustomerName || (s.customer && s.customer.user && s.customer.user.name) || 'Unknown';
+                const type = s.appointmentType || s.AppointmentType || s.appointmentType || 'Service';
+                const dateStr = s.date || s.Date || s.startDate || null;
+                return (
+                  <li key={s.appointmentID ?? s.AppointmentID ?? i} className="flex items-center justify-between p-3 bg-[#161616] rounded">
+                    <div>
+                      <div className="font-medium">{customerName}</div>
+                      <div className="text-sm text-gray-400">{type} • {dateStr ? new Date(dateStr).toLocaleString() : 'No date'}</div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Link to="/employee/services" className="text-sm bg-green-600 px-2 py-1 rounded">View</Link>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </section>
