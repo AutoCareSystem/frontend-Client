@@ -1,16 +1,19 @@
 import {
   BrowserRouter as Router,
   Routes,
-  Route,
+  Route, Navigate,
   Navigate,
 } from "react-router-dom";
 import ChatbotButton from "./components/ChatbotButton";
+
+// Customer Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
 import CleanDashboard from "./pages/customer/CleanDashboard";
-import BookAppointment from "./pages/customer/BookAppointment";
-import Modifications from "./pages/customer/Modifications";
+import ServicePage from "./pages/customer/ServicePage";
+import ProjectPage from "./pages/customer/Projectpage";
 import CustomerProfile from "./pages/customer/Profile";
 
+// Employee Pages
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import TimeLogs from "./pages/employee/TimeLogs";
 import Projects from "./pages/employee/Projects";
@@ -20,8 +23,14 @@ import Services from "./pages/employee/Services";
 import AddService from "./pages/employee/AddService";
 import UserManagement from "./pages/employee/UserManagement";
 
+// Auth Pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+
+// 404 Page Component
+function NotFound() {
+  return <div style={{ textAlign: "center", marginTop: "50px" }}><h1>404 - Page Not Found</h1></div>;
+}
 
 export default function App() {
   return (
@@ -31,6 +40,9 @@ export default function App() {
           {/* Default redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
+        {/* Root Redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -38,8 +50,10 @@ export default function App() {
         {/* Customer Routes */}
         <Route path="/customer/dashboard" element={<CleanDashboard />} />
         <Route path="/customer/dashboard-old" element={<CustomerDashboard />} />
-        <Route path="/customer/appointments" element={<BookAppointment />} />
-        <Route path="/customer/modifications" element={<Modifications />} />
+        <Route path="/customer/appointments" element={<ServicePage />} />
+        <Route path="/Servicepage" element={<ServicePage />} /> {/* optional duplicate */}
+        <Route path="/customer/modifications" element={<ProjectPage />} />
+        <Route path="/Projectpage" element={<ProjectPage />} /> {/* optional duplicate */}
         <Route path="/customer/profile" element={<CustomerProfile />} />
 
         {/* Employee Routes */}
@@ -51,6 +65,9 @@ export default function App() {
   <Route path="/employee/users" element={<UserManagement />} />
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />
+
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <ChatbotButton />
       </div>
