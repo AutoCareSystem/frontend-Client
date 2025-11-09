@@ -33,15 +33,16 @@ function NotFound() {
 }
 
 export default function App() {
+  const role = typeof window !== 'undefined' ? (localStorage.getItem('Role') ?? localStorage.getItem('role') ?? localStorage.getItem('userRole')) : null;
+
+  const defaultRedirect = role && String(role).toLowerCase() === 'employee' ? '/employee/dashboard' : '/customer/dashboard';
+
   return (
     <Router>
       <div className="relative">
         <Routes>
-          {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* Root Redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Default redirect based on localStorage Role */}
+        <Route path="/" element={<Navigate to={defaultRedirect} replace />} />
 
         {/* Auth */}
           <Route path="/login" element={<Login />} />
