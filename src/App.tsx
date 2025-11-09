@@ -1,8 +1,7 @@
 import {
   BrowserRouter as Router,
   Routes,
-  Route, Navigate,
-  Navigate,
+  Route, Navigate
 } from "react-router-dom";
 
 // Customer Pages
@@ -14,13 +13,13 @@ import ProjectPage from "./pages/customer/Projectpage";
 import CustomerProfile from "./pages/customer/Profile";
 
 // Employee Pages
-import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+// import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import TimeLogs from "./pages/employee/TimeLogs";
-import Projects from "./pages/employee/Projects";
+// import Projects from "./pages/employee/Projects";
 import Appointments from "./pages/employee/Appointments";
 import Profile from "./pages/employee/Profile";
-import Services from "./pages/employee/Services";
-import AddService from "./pages/employee/AddService";
+// import Services from "./pages/employee/Services";
+// import AddService from "./pages/employee/AddService";
 import UserManagement from "./pages/employee/UserManagement";
 
 // Auth Pages
@@ -37,11 +36,11 @@ export default function App() {
     <Router>
       <div className="relative">
         <Routes>
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+  {/* Default redirect to customer dashboard (force customer navbar) */}
+  <Route path="/" element={<Navigate to="/customer/dashboard" replace />} />
 
-        {/* Root Redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+  {/* Redirect any employee paths to customer dashboard so customer navbar is used */}
+  <Route path="/employee/*" element={<Navigate to="/customer/dashboard" replace />} />
 
           {/* Auth */}
           <Route path="/login" element={<Login />} />
@@ -57,11 +56,11 @@ export default function App() {
         <Route path="/customer/profile" element={<CustomerProfile />} />
 
         {/* Employee Routes */}
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        {/* <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
         <Route path="/employee/timelogs" element={<TimeLogs />} />
         <Route path="/employee/projects" element={<Projects />} />
         <Route path="/employee/services" element={<Services />} />
-    <Route path="/employee/services/add" element={<AddService />} />
+    <Route path="/employee/services/add" element={<AddService />} /> */}
   <Route path="/employee/users" element={<UserManagement />} />
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />

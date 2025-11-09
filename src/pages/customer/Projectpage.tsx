@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import ProjectCard from '../../components/customer/ProjectCard';
 import ProjectForm from '../../components/customer/ProjectForm';
-import Sidebar from '../../components/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { createProject, getCustomerProjects, deleteAppointment, type Appointment } from '../../api/appointments';
 
@@ -240,9 +239,8 @@ const ProjectPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen py-8 ${dark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
-      <div className="px-4 mx-auto max-w-7xl">
-        <div className="flex gap-6">
-          <Sidebar role="customer" />
+      <div className="px-4 w-full">
+        <div className="w-full">
           <div className="flex-1">
             {/* Header */}
             <div className={`${dark ? PAGE_CONFIG.headerBg : 'bg-white'} p-6 mb-8 rounded-lg shadow-md`}>

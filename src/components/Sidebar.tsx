@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import type { ReactElement } from "react";
 import {
   Home,
   Clock,
@@ -6,18 +7,24 @@ import {
   User,
   Calendar,
   MessageCircle,
-  LogOut, Users,
+  LogOut,
+  Users,
+  Wrench,
 } from "lucide-react";
-import { Wrench } from "lucide-react";
 
 interface SidebarProps {
   role: "Customer" | "Employee";
 }
+type MenuItem = {
+  name: string;
+  path: string;
+  icon: ReactElement;
+};
 
 export default function Sidebar({ role }: SidebarProps) {
   const { pathname } = useLocation();
 
-  const customerMenu = [
+  const customerMenu: MenuItem[] = [
     {
       name: "Dashboard",
       path: "/customer/dashboard",
@@ -40,38 +47,40 @@ export default function Sidebar({ role }: SidebarProps) {
     },
   ];
 
-  const employeeMenu = [
-    {
-      name: "Dashboard",
-      path: "/employee/dashboard",
-      icon: <Home size={20} />,
-    },
-    {
-      name: "Time Logs",
-      path: "/employee/timelogs",
-      icon: <Clock size={20} />,
-    },
-    {
-      name: "Projects",
-      path: "/employee/projects",
-      icon: <Folder size={20} />,
-    },
-  { name: "Services", path: "/employee/services", icon: <Wrench size={20} /> },
-  { name: "Users", path: "/employee/users", icon: <Users size={20} /> },
-    {
-      name: "Appointments",
-      path: "/employee/appointments",
-      icon: <Calendar size={20} />,
-    },
-    { name: "Profile", path: "/employee/profile", icon: <User size={20} /> },
-  ];
+  // const employeeMenu: MenuItem[] = [
+  //   {
+  //     name: "Dashboard",
+  //     path: "/employee/dashboard",
+  //     icon: <Home size={20} />,
+  //   },
+  //   {
+  //     name: "Manage",
+  //     path: "/employee/manage",
+  //     icon: <Wrench size={20} />,
+  //   },
+  //   {
+  //     name: "Appointments",
+  //     path: "/employee/appointments",
+  //     icon: <Clock size={20} />,
+  //   },
+  //   {
+  //     name: "Customers",
+  //     path: "/employee/customers",
+  //     icon: <Users size={20} />,
+  //   },
+  //   {
+  //     name: "Messages",
+  //     path: "/employee/messages",
+  //     icon: <MessageCircle size={20} />,
+  //   },
+  // ];
 
-  const menuItems = role === "Customer" ? customerMenu : employeeMenu;
+  const menuItems = customerMenu;
 
   return (
     <aside className="h-screen w-64 bg-[#0a0a0a] text-gray-100 flex flex-col shadow-lg">
-      <div className="p-6 text-2xl font-bold text-red-500 border-b border-gray-700">
-        AutoManage
+      <div className="p-4 border-b border-gray-700">
+        <div className="text-lg font-semibold">AutoManage</div>
       </div>
 
       <nav className="flex-1 p-4 space-y-3">
