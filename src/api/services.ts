@@ -45,7 +45,7 @@ export const getServices = async (): Promise<ServiceApiResponse[]> => {
 export const getServicePackages = async (): Promise<ServicePackage[]> => {
   const res = await axios.get<ServicePackage[]>(`${API_BASE_URL}/api/ServicePackages`);
   return res.data;
-};import axios from "axios";
+};
 
 export type ServiceDto = {
   serviceID?: number;

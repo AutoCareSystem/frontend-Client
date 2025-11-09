@@ -43,6 +43,13 @@ export default function EmployeeDashboard() {
     return items.filter((r: any) => (r.appointmentType?.toLowerCase?.() === 'service' || (r.AppointmentType && String(r.AppointmentType).toLowerCase() === 'service')) && (String(r.status || r.Status || '').toLowerCase() === 'pending'));
   }, [profile]);
 
+  // quickStats used by the quick stats cards in the UI (includes a color field used in classNames)
+  const quickStats = [
+    { title: "Active Projects", value: projects.length, color: "text-red-500" },
+    { title: "Pending Services", value: pendingServices.length, color: "text-yellow-500" },
+    { title: "Completed Appointments", value: profile?.completedAppointments ?? 0, color: "text-green-500" },
+  ];
+
   useEffect(() => {
     let mounted = true;
 
@@ -106,13 +113,14 @@ export default function EmployeeDashboard() {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {stats.map((s) => (
-            <div key={s.title} className="bg-[#2a2a2a] p-6 rounded-xl shadow-md border border-gray-700">
-              <h3 className="text-gray-400">{s.title}</h3>
-              <p className="text-3xl font-bold mt-2 text-red-500">{s.value}</p>
-      <Sidebar role="employee" />
-      <main className="flex-1 overflow-y-auto">
+      <section className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {stats.map((s) => (
+          <div key={s.title} className="bg-[#2a2a2a] p-6 rounded-xl shadow-md border border-gray-700">
+            <h3 className="text-gray-400">{s.title}</h3>
+            <p className="text-3xl font-bold mt-2 text-red-500">{s.value}</p>
+          </div>
+        ))}
+      </section>
         {/* Header */}
         <div className="bg-[#2a2a2a] border-b border-gray-700 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
@@ -171,7 +179,7 @@ export default function EmployeeDashboard() {
               <EmployeePerformance />
             </div>
           </div>
-        </section>
+        </div>
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-[#2a2a2a] p-6 rounded-xl border border-gray-700">

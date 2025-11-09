@@ -1,7 +1,7 @@
 import {
   BrowserRouter as Router,
   Routes,
-  Route, Navigate,
+  Route,
   Navigate,
 } from "react-router-dom";
 import ChatbotButton from "./components/ChatbotButton";

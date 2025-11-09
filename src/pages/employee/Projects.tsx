@@ -1,7 +1,6 @@
 import Sidebar from "../../components/Sidebar";
 import { useMemo, useState, useEffect } from "react";
 import { fetchProjects } from "../../api/projects";
-import type { AppointmentDto } from "../../types/appointments";
 
 type ProjectItem = {
   id: number;
@@ -58,7 +57,7 @@ export default function Projects() {
         if (!mounted) return;
         // Map backend DTOs to local ProjectItem shape when possible
         const mapped: ProjectItem[] = data.map((dRaw, idx) => {
-          const d = dRaw as AppointmentDto & any;
+          const d = dRaw as any;
           // customer name can be nested: d.customer.user.name or top-level customerName
           const customerName = (d.customer && d.customer.user && d.customer.user.name) || d.customerName || "Unknown";
           // project title can be in projectDetails or top-level projectTitle
@@ -78,7 +77,6 @@ export default function Projects() {
             status,
           } as ProjectItem;
         });
-
         if (mapped.length) setProjects(mapped);
       } catch (err: any) {
         setLoadError(err?.message ?? "Failed to load projects");
@@ -116,7 +114,7 @@ export default function Projects() {
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar role="Employee" role="employee" />
+      <Sidebar role="Employee" />
       
       <main className="flex-1 p-8 overflow-y-auto">
         <h1 className="text-3xl font-bold text-red-500 mb-6">Projects</h1>
