@@ -5,12 +5,15 @@ import {
   Navigate,
 } from "react-router-dom";
 import ChatbotButton from "./components/ChatbotButton";
+
+// Customer Pages
 import CustomerDashboard from "./pages/customer/Dashboard";
 import CleanDashboard from "./pages/customer/CleanDashboard";
-import BookAppointment from "./pages/customer/BookAppointment";
-import Modifications from "./pages/customer/Modifications";
+import ServicePage from "./pages/customer/ServicePage";
+import ProjectPage from "./pages/customer/Projectpage";
 import CustomerProfile from "./pages/customer/Profile";
 
+// Employee Pages
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import TimeLogs from "./pages/employee/TimeLogs";
 import Projects from "./pages/employee/Projects";
@@ -20,26 +23,42 @@ import Services from "./pages/employee/Services";
 import AddService from "./pages/employee/AddService";
 import UserManagement from "./pages/employee/UserManagement";
 
+// Auth Pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import Home from "./pages/Home";
+import { ToastProvider } from './components/ToastProvider';
+
+// 404 Page Component
+function NotFound() {
+  return <div style={{ textAlign: "center", marginTop: "50px" }}><h1>404 - Page Not Found</h1></div>;
+}
 
 export default function App() {
+  const role = typeof window !== 'undefined' ? (localStorage.getItem('Role') ?? localStorage.getItem('role') ?? localStorage.getItem('userRole')) : null;
+
+  const defaultRedirect = role && String(role).toLowerCase() === 'employee' ? '/employee/dashboard' : '/customer/dashboard';
+
   return (
     <Router>
+      <ToastProvider>
       <div className="relative">
         <Routes>
-          {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Default redirect based on localStorage Role */}
+        <Route path="/" element={<Navigate to={defaultRedirect} replace />} />
 
-        {/* Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+  {/* Auth */}
+  <Route path="/" element={<Home />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/signup" element={<Signup />} />
 
         {/* Customer Routes */}
         <Route path="/customer/dashboard" element={<CleanDashboard />} />
         <Route path="/customer/dashboard-old" element={<CustomerDashboard />} />
-        <Route path="/customer/appointments" element={<BookAppointment />} />
-        <Route path="/customer/modifications" element={<Modifications />} />
+        <Route path="/customer/appointments" element={<ServicePage />} />
+        <Route path="/Servicepage" element={<ServicePage />} /> {/* optional duplicate */}
+        <Route path="/customer/modifications" element={<ProjectPage />} />
+        <Route path="/Projectpage" element={<ProjectPage />} /> {/* optional duplicate */}
         <Route path="/customer/profile" element={<CustomerProfile />} />
 
         {/* Employee Routes */}
@@ -51,9 +70,13 @@ export default function App() {
   <Route path="/employee/users" element={<UserManagement />} />
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />
+
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <ChatbotButton />
       </div>
+      </ToastProvider>
     </Router>
   );
 }

@@ -11,11 +11,12 @@ import {
 import { Wrench } from "lucide-react";
 
 interface SidebarProps {
-  role: "Customer" | "Employee";
+  role: string | "Customer" | "Employee";
 }
 
 export default function Sidebar({ role }: SidebarProps) {
   const { pathname } = useLocation();
+  const roleStr = String(role ?? '').toLowerCase();
 
   const customerMenu = [
     {
@@ -24,7 +25,7 @@ export default function Sidebar({ role }: SidebarProps) {
       icon: <Home size={20} />,
     },
     {
-      name: "Appointments",
+      name: "Services",
       path: "/customer/appointments",
       icon: <Calendar size={20} />,
     },
@@ -66,7 +67,7 @@ export default function Sidebar({ role }: SidebarProps) {
     { name: "Profile", path: "/employee/profile", icon: <User size={20} /> },
   ];
 
-  const menuItems = role === "Customer" ? customerMenu : employeeMenu;
+  const menuItems = roleStr === "customer" ? customerMenu : employeeMenu;
 
   return (
     <aside className="h-screen w-64 bg-[#0a0a0a] text-gray-100 flex flex-col shadow-lg">
@@ -89,7 +90,7 @@ export default function Sidebar({ role }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-gray-700">
-        <button className="flex items-center gap-3 p-3 w-full rounded-lg hover:bg-red-700 transition">
+        <button className="flex items-center w-full gap-3 p-3 transition rounded-lg hover:bg-red-700">
           <LogOut size={20} /> Logout
         </button>
       </div>
