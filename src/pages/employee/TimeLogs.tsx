@@ -32,7 +32,6 @@ export default function TimeLogs() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detailsMap, setDetailsMap] = useState<Record<number, any>>({});
-  const [startingIds, setStartingIds] = useState<number[]>([]);
   const [endingIds, setEndingIds] = useState<number[]>([]);
 
   const [now, setNow] = useState<number>(Date.now());
@@ -131,7 +130,6 @@ export default function TimeLogs() {
   const start = async (id: number) => {
     // Optimistic update: set item to InProgress
     const previous = items;
-    setStartingIds(prev => [...prev, id]);
     setItems(prev => prev.map(it => {
       if (it.id === id) return { ...it, status: "InProgress", startTime: new Date().toISOString(), endTime: null };
       if (it.status === "InProgress") return { ...it, status: "Approved", startTime: null };
@@ -162,14 +160,12 @@ export default function TimeLogs() {
   const serverStatus = normalizeStatus(res?.status ?? res?.data?.status ?? 'InProgress');
   setItems(prev => prev.map(it => it.id === id ? { ...it, status: serverStatus, startTime: startIso ?? new Date().toISOString(), endTime: null } : it));
       setActiveId(id);
-      setStartingIds(prev => prev.filter(x => x !== id));
     } catch (err: any) {
       console.error('[TimeLogs] failed to start appointment', err);
       setError(err?.message ?? 'Failed to start appointment');
       // revert optimistic change
       setItems(previous);
       setActiveId(null);
-      setStartingIds(prev => prev.filter(x => x !== id));
     }
   };
 
