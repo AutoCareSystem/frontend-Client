@@ -240,7 +240,7 @@ const ProjectPage: React.FC = () => {
 
   return (
     <div className={`min-h-screen py-8 ${dark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
-      <div className="px-4 mx-auto max-w-7xl">
+      <div className="px-4 w-full">
         <div className="flex gap-6">
           <Sidebar role="customer" />
           <div className="flex-1">
