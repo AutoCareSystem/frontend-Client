@@ -1,4 +1,5 @@
 import Sidebar from "../../components/Sidebar";
+import Breadcrumbs from "../../components/Breadcrumbs";
 
 export default function Modifications() {
   const mods = [
@@ -10,6 +11,7 @@ export default function Modifications() {
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
       <Sidebar role="customer"/>
       <main className="flex-1 p-8 overflow-y-auto">
+        <Breadcrumbs className="mb-4" />
         <h1 className="text-3xl font-bold text-red-500 mb-6">Vehicle Modifications</h1>
         <ul className="space-y-4">
           {mods.map((mod, idx) => (

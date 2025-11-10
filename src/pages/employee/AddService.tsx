@@ -1,4 +1,5 @@
 import Sidebar from "../../components/Sidebar";
+import Breadcrumbs from "../../components/Breadcrumbs";
 import { useState } from "react";
 import { createService, type ServiceDto } from "../../api/services";
 import { useNavigate } from "react-router-dom";
@@ -42,6 +43,7 @@ export default function AddService() {
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
       <Sidebar role="employee" />
       <main className="flex-1 p-8 overflow-y-auto">
+        <Breadcrumbs className="mb-4" />
         <h1 className="text-3xl font-bold text-red-500 mb-6">Add Service</h1>
 
         <form onSubmit={onSubmit} className="max-w-2xl bg-[#121212] p-6 rounded-lg border border-gray-700">
