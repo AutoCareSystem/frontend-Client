@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -9,7 +8,6 @@ export default function Login() {
   const [role, setRole] = useState<"Customer" | "Employee">("Customer");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -18,25 +16,33 @@ export default function Login() {
         password,
       });
 
-      console.log('Login response:', res.data);
-      
+      console.log("Login response:", res.data);
+
       // Save tokens and user info
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("refreshToken", res.data.refreshToken);
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("userId", res.data.userId);
-      
-      console.log('Stored values:', {
+      localStorage.setItem("email", res.data.email);
+
+      // For customers, userId is the customerId
+      if (res.data.role === "Customer") {
+        localStorage.setItem("customerId", res.data.userId);
+      }
+
+      console.log("Stored values:", {
         accessToken: localStorage.getItem("accessToken"),
         role: localStorage.getItem("role"),
-        userId: localStorage.getItem("userId")
+        userId: localStorage.getItem("userId"),
+        customerId: localStorage.getItem("customerId"),
+        email: localStorage.getItem("email"),
       });
 
       // Navigate based on backend role
       if (res.data.role === "Customer") navigate("/customer/dashboard");
       else navigate("/employee/dashboard");
     } catch (err: any) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
       setError("Invalid email or password");
     }
   };
@@ -63,9 +69,7 @@ export default function Login() {
         <select
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
           value={role}
-          onChange={(e) =>
-            setRole(e.target.value as "Customer" | "Employee")
-          }
+          onChange={(e) => setRole(e.target.value as "Customer" | "Employee")}
         >
           <option value="Customer">Customer</option>
           <option value="Employee">Employee</option>

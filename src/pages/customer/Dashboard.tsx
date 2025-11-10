@@ -1,7 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../components/Sidebar";
-import { LogOut } from "lucide-react";
 import RealTimeTracking from "../../components/RealTimeTracking";
 import ServiceHistory from "../../components/ServiceHistory";
 import ActivityFeed from "../../components/ActivityFeed";
@@ -35,9 +32,6 @@ interface Appointment {
 }
 
 export default function CustomerDashboard() {
-  const { logout, user } = useAuth();
-  const navigate = useNavigate();
-
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(
     null
   );
@@ -46,11 +40,8 @@ export default function CustomerDashboard() {
 
   // Get initial values from .env (priority) or localStorage
   // Force use of .env values for real data
-  const customerId =
-    
-    localStorage.getItem("customerId") ;
-  const vehicleId =
-    localStorage.getItem("vehicleId") ;
+  const customerId = localStorage.getItem("customerId");
+  const vehicleId = localStorage.getItem("vehicleId");
 
   // Fetch actual data from API
   useEffect(() => {
@@ -183,14 +174,9 @@ export default function CustomerDashboard() {
           }))
       : [];
 
-  const handleLogout = () => {
-    logout(); // Clear user data and tokens
-    navigate("/login"); // Redirect to login page
-  };
-
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar role="customer" />
+      <Sidebar role="Customer" />
       <main className="flex-1 overflow-y-auto scrollbar-hide">
         {/* Header */}
         <div className="bg-[#2a2a2a] border-b border-gray-700 p-6 sticky top-0 z-10">

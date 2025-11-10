@@ -164,7 +164,7 @@ export default function NewCustomerDashboard() {
   if (loading) {
     return (
       <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-        <Sidebar role="customer" />
+        <Sidebar role="Customer" />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
@@ -178,7 +178,7 @@ export default function NewCustomerDashboard() {
   if (error) {
     return (
       <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-        <Sidebar role="customer" />
+        <Sidebar role="Customer" />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -197,14 +197,22 @@ export default function NewCustomerDashboard() {
 
   return (
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar role="customer" />
+      <Sidebar role="Customer" />
       <main className="flex-1 overflow-y-auto">
         {/* Header */}
         <div className="bg-[#2a2a2a] border-b border-gray-700 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white">
-                Welcome back, {customerProfile?.userName || "Customer"}!
+                Welcome back,{" "}
+                {customerProfile?.userName
+                  ? customerProfile.userName
+                      .split("@")[0]
+                      .charAt(0)
+                      .toUpperCase() +
+                    customerProfile.userName.split("@")[0].slice(1)
+                  : "Customer"}
+                !
               </h1>
               <p className="text-gray-400 mt-1">
                 Here's your automotive service overview
@@ -238,7 +246,9 @@ export default function NewCustomerDashboard() {
                   </div>
                   <TrendingUp className="h-4 w-4 text-emerald-400" />
                 </div>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Total Spent</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">
+                  Total Spent
+                </p>
                 <p className="text-3xl font-bold text-white mb-1">
                   {utils.formatCurrency(overallStats.totalSpent)}
                 </p>
@@ -259,7 +269,9 @@ export default function NewCustomerDashboard() {
                   </div>
                   <Zap className="h-4 w-4 text-blue-400" />
                 </div>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">My Vehicles</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">
+                  My Vehicles
+                </p>
                 <p className="text-3xl font-bold text-white mb-1">
                   {overallStats.totalVehicles}
                 </p>
@@ -277,7 +289,9 @@ export default function NewCustomerDashboard() {
                   </div>
                   <Award className="h-4 w-4 text-green-400" />
                 </div>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">Completed</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">
+                  Completed
+                </p>
                 <p className="text-3xl font-bold text-white mb-1">
                   {overallStats.completedCount}
                 </p>
@@ -295,7 +309,9 @@ export default function NewCustomerDashboard() {
                   </div>
                   <Wrench className="h-4 w-4 text-amber-400" />
                 </div>
-                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">In Progress</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">
+                  In Progress
+                </p>
                 <p className="text-3xl font-bold text-white mb-1">
                   {overallStats.pendingCount}
                 </p>
@@ -311,12 +327,13 @@ export default function NewCustomerDashboard() {
               {/* Customer Profile - Enhanced */}
               <div className="group relative bg-gradient-to-br from-[#2a2a2a] via-[#252525] to-[#2a2a2a] p-6 rounded-xl border border-gray-700 hover:border-gray-600 shadow-lg overflow-hidden transition-all duration-300">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-red-500/5 to-purple-500/5 rounded-full blur-3xl"></div>
-                
+
                 <div className="relative mb-6">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                     <div className="relative">
                       <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-red-500/20">
-                        {customerProfile?.userName?.charAt(0).toUpperCase() || "U"}
+                        {customerProfile?.userName?.charAt(0).toUpperCase() ||
+                          "U"}
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#2a2a2a]"></div>
                     </div>
@@ -324,7 +341,9 @@ export default function NewCustomerDashboard() {
                       <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                         Profile Information
                       </span>
-                      <p className="text-xs text-gray-400 font-normal">Active member</p>
+                      <p className="text-xs text-gray-400 font-normal">
+                        Active member
+                      </p>
                     </div>
                   </h2>
                 </div>
@@ -409,7 +428,7 @@ export default function NewCustomerDashboard() {
               {/* Vehicles Section - Enhanced */}
               <div className="relative bg-gradient-to-br from-[#2a2a2a] via-[#252525] to-[#2a2a2a] p-6 rounded-xl border border-gray-700 hover:border-gray-600 shadow-lg overflow-hidden transition-all duration-300">
                 <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-full blur-3xl"></div>
-                
+
                 <div className="relative mb-6">
                   <h2 className="text-xl font-bold text-white flex items-center gap-3">
                     <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -419,7 +438,9 @@ export default function NewCustomerDashboard() {
                       <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                         My Vehicles
                       </span>
-                      <p className="text-xs text-gray-400 font-normal">{vehicles.length} registered</p>
+                      <p className="text-xs text-gray-400 font-normal">
+                        {vehicles.length} registered
+                      </p>
                     </div>
                   </h2>
                 </div>
@@ -434,7 +455,7 @@ export default function NewCustomerDashboard() {
                           className="group/vehicle relative bg-[#1a1a1a] p-5 rounded-xl border border-gray-600 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 overflow-hidden"
                         >
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-cyan-500/0 to-blue-500/5 opacity-0 group-hover/vehicle:opacity-100 transition-opacity duration-300"></div>
-                          
+
                           <div className="relative">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex items-start space-x-3 flex-1">
@@ -472,7 +493,9 @@ export default function NewCustomerDashboard() {
                                       {utils.formatCurrency(summary.totalSpent)}
                                     </p>
                                   </div>
-                                  <p className="text-gray-400 text-xs uppercase tracking-wide">Total Spent</p>
+                                  <p className="text-gray-400 text-xs uppercase tracking-wide">
+                                    Total Spent
+                                  </p>
                                 </div>
                                 <div className="group/stat text-center p-3 bg-blue-500/5 rounded-lg border border-blue-500/10 hover:border-blue-500/30 transition-all">
                                   <div className="flex items-center justify-center gap-1 mb-1">
@@ -481,7 +504,9 @@ export default function NewCustomerDashboard() {
                                       {summary.completedCount}
                                     </p>
                                   </div>
-                                  <p className="text-gray-400 text-xs uppercase tracking-wide">Completed</p>
+                                  <p className="text-gray-400 text-xs uppercase tracking-wide">
+                                    Completed
+                                  </p>
                                 </div>
                                 <div className="group/stat text-center p-3 bg-amber-500/5 rounded-lg border border-amber-500/10 hover:border-amber-500/30 transition-all">
                                   <div className="flex items-center justify-center gap-1 mb-1">
@@ -490,7 +515,9 @@ export default function NewCustomerDashboard() {
                                       {summary.pendingCount}
                                     </p>
                                   </div>
-                                  <p className="text-gray-400 text-xs uppercase tracking-wide">Pending</p>
+                                  <p className="text-gray-400 text-xs uppercase tracking-wide">
+                                    Pending
+                                  </p>
                                 </div>
                               </div>
                             )}
@@ -510,7 +537,7 @@ export default function NewCustomerDashboard() {
               {/* Available Services - Enhanced */}
               <div className="relative bg-gradient-to-br from-[#2a2a2a] via-[#252525] to-[#2a2a2a] p-6 rounded-xl border border-gray-700 hover:border-gray-600 shadow-lg overflow-hidden transition-all duration-300">
                 <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-green-500/5 to-emerald-500/5 rounded-full blur-3xl"></div>
-                
+
                 <div className="relative mb-6">
                   <h2 className="text-xl font-bold text-white flex items-center gap-3">
                     <div className="p-2 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg">
@@ -520,7 +547,9 @@ export default function NewCustomerDashboard() {
                       <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                         Available Services
                       </span>
-                      <p className="text-xs text-gray-400 font-normal">Book your next service</p>
+                      <p className="text-xs text-gray-400 font-normal">
+                        Book your next service
+                      </p>
                     </div>
                   </h2>
                 </div>
@@ -532,7 +561,7 @@ export default function NewCustomerDashboard() {
                       className="group/service relative p-4 bg-[#1a1a1a] rounded-xl hover:bg-gray-800/50 transition-all duration-300 cursor-pointer border border-gray-600 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/10 overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 via-emerald-500/0 to-green-500/5 opacity-0 group-hover/service:opacity-100 transition-opacity duration-300"></div>
-                      
+
                       <div className="relative">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
@@ -565,8 +594,12 @@ export default function NewCustomerDashboard() {
                       <div className="inline-flex p-4 bg-green-500/10 rounded-full mb-4">
                         <AlertCircle className="h-8 w-8 text-green-400" />
                       </div>
-                      <p className="text-gray-400 mb-2">No services available</p>
-                      <p className="text-gray-500 text-sm">Check back later for new services</p>
+                      <p className="text-gray-400 mb-2">
+                        No services available
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Check back later for new services
+                      </p>
                     </div>
                   )}
                 </div>
@@ -651,7 +684,8 @@ export default function NewCustomerDashboard() {
                         </p>
                         {project.vehicle && (
                           <p className="text-gray-500 text-xs mt-1">
-                            {project.vehicle.company} {project.vehicle.model} ({project.vehicle.year})
+                            {project.vehicle.company} {project.vehicle.model} (
+                            {project.vehicle.year})
                           </p>
                         )}
                       </div>
