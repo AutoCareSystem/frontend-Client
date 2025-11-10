@@ -120,18 +120,19 @@ const ProjectPage: React.FC = () => {
   const handleAddService = async (): Promise<void> => {
     if (!validateForm()) return;
 
-    if (!user?.customerID) {
+    if (!localStorage.getItem("userId")) {
       alert('Please log in to create a project.');
+      alert("This is executed")
       return;
     }
 
     try {
       const projectDto = {
-        CustomerID: user.customerID,
+        CustomerID: localStorage.getItem("userId"),
         ProjectTitle: formData.name,
         ProjectDescription: formData.description,
         EndDate: formData.endDate,
-        VehicleID: user.vehicleID ? Number(user.vehicleID) : null,
+        VehicleID: 10,
       };
 
       console.log('Creating project:', projectDto);

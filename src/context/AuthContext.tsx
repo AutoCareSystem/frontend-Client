@@ -17,6 +17,40 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Function to decode JWT token
+const decodeJWT = (token: string) => {
+  try {
+    // Split the token into header, payload, and signature
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Invalid JWT token format');
+    }
+
+    // Decode the payload (second part)
+    const payload = parts[1];
+    
+    // Add padding if needed for base64 decoding
+    const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
+    
+    // Decode base64 and parse JSON
+    const decodedPayload = JSON.parse(atob(paddedPayload));
+    
+    return decodedPayload;
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+
+// Function to extract user ID from token
+const extractUserIdFromToken = (token: string): string | null => {
+  const decoded = decodeJWT(token);
+  if (decoded && decoded.sub) {
+    return decoded.sub;
+  }
+  return null;
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthContextType['user']>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -28,27 +62,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (storedUser && storedToken) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        
+        // If user doesn't have userId, try to extract it from token
+        if (!parsedUser.userId) {
+          const userIdFromToken = extractUserIdFromToken(storedToken);
+          if (userIdFromToken) {
+            parsedUser.userId = userIdFromToken;
+            // Update localStorage with the userId
+            localStorage.setItem('user', JSON.stringify(parsedUser));
+            localStorage.setItem('userId', userIdFromToken);
+          }
+        }
+        
+        setUser(parsedUser);
         setAccessToken(storedToken);
       } catch (error) {
         console.error('Error parsing stored user data:', error);
         // Clear invalid data
         localStorage.removeItem('user');
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('role');
+        localStorage.removeItem('userId');
       }
     }
   }, []);
 
   const login = (userData: any, tokens: { accessToken: string; refreshToken: string }) => {
+    // Extract user ID from access token
+    const userIdFromToken = extractUserIdFromToken(tokens.accessToken);
+    
+    // Merge userData with extracted userId
+    const updatedUserData = {
+      ...userData,
+      userId: userIdFromToken || userData.userId // Use token userId if available, fallback to userData
+    };
+    
     // Store in state
-    setUser(userData);
+    setUser(updatedUserData);
     setAccessToken(tokens.accessToken);
     
     // Store in localStorage
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
     localStorage.setItem('accessToken', tokens.accessToken);
     localStorage.setItem('refreshToken', tokens.refreshToken);
-    localStorage.setItem('role', userData.role);
+    localStorage.setItem('role', updatedUserData.role);
+    
+    // Store userId separately for easy access
+    if (userIdFromToken) {
+      localStorage.setItem('userId', userIdFromToken);
+    }
+
+    // Optional: Log the decoded token for debugging
+    console.log('Decoded JWT payload:', decodeJWT(tokens.accessToken));
   };
 
   const logout = () => {
@@ -79,3 +146,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Export utility functions for use elsewhere in your app
+export { decodeJWT, extractUserIdFromToken };

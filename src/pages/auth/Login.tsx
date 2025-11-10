@@ -17,9 +17,9 @@ export default function Login() {
         password,
       });
 
-      console.log('Login response:', res.data); // ✅ Debug
+      alert('Login response:'+ res.data.refreshToken); // ✅ Debug
 
-      const userData = {
+      const userData = {  
         userId: res.data.userId,
         customerID: res.data.customerID,  // ✅ Now returned from backend
         employeeID: res.data.employeeID,  // ✅ Now returned from backend
@@ -28,8 +28,9 @@ export default function Login() {
         email: res.data.email,
       };
 
-      console.log('🔍 Full Login Response:', res.data)
+      alert('🔍 Full Login Response:'+ res.data);
       
+
       const tokens = {
         accessToken: res.data.accessToken,
         refreshToken: res.data.refreshToken,

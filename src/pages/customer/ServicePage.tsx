@@ -35,14 +35,16 @@ const ServicePage: React.FC = () => {
   const { user } = useAuth();
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
-  const [serviceMode, setServiceMode] = useState<'full' | 'half' | 'custom'>('custom');
+  const [serviceMode, setServiceMode] = useState<'Full' | 'Half' | 'Custom'>('Custom');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [bookingsLoading, setBookingsLoading] = useState<boolean>(true);
 
   const activeServices = services.filter(s => s.status === 'Active');
-  const FULL_SERVICE_IDS = activeServices.slice(0, 6).map(s => s.serviceID);
-  const HALF_SERVICE_IDS = activeServices.slice(0, 4).map(s => s.serviceID);
+  
+  // Simple hardcoded service selection
+  const FULL_SERVICE_IDS = activeServices.slice(0, 4).map(s => s.serviceID);
+  const HALF_SERVICE_IDS = activeServices.slice(0, 2).map(s => s.serviceID);
 
   // Fetch services from API
   useEffect(() => {
@@ -144,13 +146,25 @@ const ServicePage: React.FC = () => {
     }, 0);
   };
 
+  const handleServiceModeChange = (mode: 'Full' | 'Half' | 'Custom') => {
+    setServiceMode(mode);
+    
+    if (mode === 'Full') {
+      setSelectedServices(FULL_SERVICE_IDS);
+    } else if (mode === 'Half') {
+      setSelectedServices(HALF_SERVICE_IDS);
+    } else {
+      setSelectedServices([]);
+    }
+  };
+
   const handleBooking = async (endDate?: string) => {
     if (selectedServices.length === 0) {
       alert('Select at least one service.');
       return;
     }
 
-    if (!user?.customerID) {
+    if (!localStorage.getItem("userId")) {
       alert('Please log in to make a booking.');
       return;
     }
@@ -158,18 +172,18 @@ const ServicePage: React.FC = () => {
     const now = new Date();
     const startDateTime = now.toISOString();
     const timeOnly = now.toTimeString().split(' ')[0];
-    
+
     const endDateTime = endDate 
       ? new Date(endDate + 'T23:59:59').toISOString() 
       : undefined;
 
     const dto: AppointmentDto = {
-      CustomerID: user.customerID,
-      VehicleID: user.vehicleID ? Number(user.vehicleID) : null,
+      CustomerID: localStorage.getItem("userId"),
+      VehicleID: 10,
       StartDate: startDateTime,
       Time: timeOnly,
       AppointmentType: 'Service',
-      ServiceOption: 'Custom',
+      ServiceOption: serviceMode,
       CustomServiceIDs: selectedServices,
       EndDate: endDateTime,
     };
@@ -195,7 +209,7 @@ const ServicePage: React.FC = () => {
 
       setBookings(prev => [newBooking, ...prev]);
       setSelectedServices([]);
-      setServiceMode('custom');
+      setServiceMode('Custom');
       alert('Booking successful!');
     } catch (err: any) {
       console.error('Error creating booking:', err);
@@ -209,6 +223,21 @@ const ServicePage: React.FC = () => {
   };
 
   const dark = PAGE_CONFIG.darkMode;
+
+  // Get services to display based on mode
+  const getServicesToDisplay = (): Service[] => {
+    if (serviceMode === 'Full') {
+      // Show first 4 active services for Full Service
+      return activeServices.slice(0, 4);
+    } else if (serviceMode === 'Half') {
+      // Show first 2 active services for Half Service
+      return activeServices.slice(0, 2);
+    }
+    // Custom mode shows all active services
+    return activeServices;
+  };
+
+  const servicesToDisplay = getServicesToDisplay();
 
   if (loading) return <div className="p-8 text-center text-gray-300">Loading services...</div>;
 
@@ -236,45 +265,44 @@ const ServicePage: React.FC = () => {
             {/* Service mode buttons */}
             <div className="flex items-center gap-3 mb-6">
               <button
-                onClick={() => {
-                  setSelectedServices(FULL_SERVICE_IDS);
-                  setServiceMode('full');
-                }}
+                onClick={() => handleServiceModeChange('Full')}
                 className={`px-4 py-2 rounded-lg font-semibold ${
-                  serviceMode === 'full' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+                  serviceMode === 'Full' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
                 } border`}
               >
-                Full Service
+                Full Service (4 Services)
               </button>
               <button
-                onClick={() => {
-                  setSelectedServices(HALF_SERVICE_IDS);
-                  setServiceMode('half');
-                }}
+                onClick={() => handleServiceModeChange('Half')}
                 className={`px-4 py-2 rounded-lg font-semibold ${
-                  serviceMode === 'half' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+                  serviceMode === 'Half' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
                 } border`}
               >
-                Half Service
+                Half Service (2 Services)
               </button>
               <button
-                onClick={() => {
-                  setSelectedServices([]);
-                  setServiceMode('custom');
-                }}
+                onClick={() => handleServiceModeChange('Custom')}
                 className={`px-4 py-2 rounded-lg font-semibold ${
-                  serviceMode === 'custom' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
+                  serviceMode === 'Custom' ? 'bg-red-600 text-white' : dark ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'
                 } border`}
               >
                 Custom Service
               </button>
             </div>
 
+            {/* Services count display */}
+            <div className="mb-4">
+              <p className="text-sm text-gray-400">
+                Showing {servicesToDisplay.length} services 
+                {serviceMode !== 'Custom' && ` for ${serviceMode} Service`}
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {/* Service list */}
               <div className="lg:col-span-2">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  {activeServices.map(service => (
+                  {servicesToDisplay.map(service => (
                     <ServiceCard
                       key={service.serviceID}
                       service={{
@@ -286,7 +314,7 @@ const ServicePage: React.FC = () => {
                       }}
                       selected={selectedServices.includes(service.serviceID)}
                       onToggle={toggleService}
-                      disabled={serviceMode !== 'custom'}
+                      disabled={serviceMode !== 'Custom'}
                       showCategory={PAGE_CONFIG.showCategory}
                       primaryColor={PAGE_CONFIG.primaryColor}
                       dark={dark}
