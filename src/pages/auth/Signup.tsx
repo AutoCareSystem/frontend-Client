@@ -76,14 +76,14 @@ export default function Signup() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
         />
-        <select
+        {/* <select
           value={role}
           onChange={(e) => setRole(e.target.value as "customer" | "employee")}
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
         >
           <option value="customer">Customer</option>
           <option value="employee">Employee</option>
-        </select>
+        </select> */}
 
         {error && <p className="text-red-500 mb-3">{error}</p>}
         {success && <p className="text-green-500 mb-3">{success}</p>}

@@ -1,4 +1,5 @@
 import Sidebar from "../../components/Sidebar";
+import Breadcrumbs from "../../components/Breadcrumbs";
 import { useMemo, useState, useEffect } from "react";
 import { fetchServices, deleteService, updateService } from "../../api/services";
 import type { ServiceDto } from "../../api/services";
@@ -132,6 +133,7 @@ export default function Services() {
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
       <Sidebar role="employee" />
       <main className="flex-1 p-8 overflow-y-auto">
+        <Breadcrumbs className="mb-4" />
         <h1 className="text-3xl font-bold text-red-500 mb-6">Services</h1>
 
         {/* Local dummy services removed - page uses backend catalog and appointment services */}

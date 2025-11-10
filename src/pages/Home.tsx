@@ -10,6 +10,7 @@ import {
   MapPin,
 } from "lucide-react";
 import heroImg from "../assets/hero-car.png";
+import Breadcrumbs from "../components/Breadcrumbs";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <main className="mx-auto px-6 py-20 max-w-7xl">
+        <Breadcrumbs className="mb-6" />
         <section className="relative grid grid-cols-1 lg:grid-cols-12 items-center gap-16">
           <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-red-600/10 blur-3xl rounded-full" />
           <div className="absolute -bottom-40 right-0 w-[400px] h-[400px] bg-sky-600/10 blur-3xl rounded-full" />

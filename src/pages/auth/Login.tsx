@@ -48,7 +48,7 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
         />
-        <select
+        {/* <select
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
           value={role}
           onChange={(e) =>
@@ -57,7 +57,7 @@ export default function Login() {
         >
           <option value="customer">Customer</option>
           <option value="employee">Employee</option>
-        </select>
+        </select> */}
 
         {error && <p className="text-red-500 mb-3">{error}</p>}
 

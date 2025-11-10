@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useMemo, useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
+import Breadcrumbs from "../../components/Breadcrumbs";
 import { BarChart2, CalendarDays, ClipboardList, Users } from "lucide-react";
 import SimpleBarChart from "../../components/charts/SimpleBarChart";
 import SimpleLineChart from "../../components/charts/SimpleLineChart";
@@ -98,10 +99,11 @@ export default function EmployeeDashboard() {
     <div className="employee-dashboard flex h-screen bg-gradient-to-br from-[#0a0a0b] via-[#101113] to-[#16181b] text-gray-100 overflow-hidden">
       <Sidebar role="employee" />
 
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto relative">
+  <main className="flex-1 p-6 md:p-8 overflow-y-auto overflow-x-hidden relative">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(255,0,0,0.06),transparent_40%)] blur-3xl"></div>
 
-        <div className="max-w-7xl mx-auto space-y-8">
+  <div className="max-w-7xl mx-auto space-y-8 rounded-xl">
+    <Breadcrumbs className="mb-2" />
           {/* Header */}
           <motion.header
             className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
@@ -207,10 +209,10 @@ export default function EmployeeDashboard() {
               <h4 className="text-sm font-semibold">Recent Team Members</h4>
               <Link to="/employee/users" className="text-xs text-gray-300 underline">Manage team</Link>
             </div>
-            <div className="flex items-center gap-3 overflow-x-auto py-2">
+            <div className="flex items-center gap-3 overflow-x-hidden py-2 flex-wrap">
               {recentUsers.length ? recentUsers.map((u:any) => (
                 <div key={u.id} className="flex items-center gap-2 bg-[#0d0e10]/60 border border-[#1a1b1d] rounded-full px-3 py-1">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white font-semibold">{getInitials(u.userName ?? u.name ?? u.email)}</div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center text-white font-semibold">{getInitials(u.userName ?? u.name ?? u.email)}</div>
                   <div className="text-sm">
                     <div className="font-medium">{u.userName ?? u.name ?? u.email}</div>
                     <div className="text-xs text-gray-400">{(u.role ?? u.source ?? 'Customer')}</div>
@@ -248,8 +250,8 @@ export default function EmployeeDashboard() {
                 <h3 className="text-lg font-semibold">Projects</h3>
                 <Link to="/employee/projects" className="text-sm text-gray-300 underline">View all</Link>
               </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left">
+              <div className="overflow-x-hidden">
+                <table className="w-full text-left">
                   <thead>
                     <tr className="text-xs text-gray-400 border-b border-[#2a2b30]">
                       <th className="py-2">Title</th>
@@ -283,7 +285,7 @@ export default function EmployeeDashboard() {
                 <Link to="/employee/appointments" className="text-sm text-gray-300 underline">View all</Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left">
+                <table className="w-full text-left">
                   <thead>
                     <tr className="text-xs text-gray-400 border-b border-[#2a2b30]">
                       <th className="py-2">Service</th>
@@ -319,7 +321,7 @@ export default function EmployeeDashboard() {
                 <Link to="/employee/services" className="text-sm text-gray-300 underline">View all</Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left">
+                <table className="w-full text-left">
                   <thead>
                     <tr className="text-xs text-gray-400 border-b border-[#2a2b30]">
                       <th className="py-2">Service</th>
@@ -353,11 +355,11 @@ export default function EmployeeDashboard() {
                 <Link to="/employee/users" className="text-sm text-gray-300 underline">Manage</Link>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left">
+                <table className="w-full text-left">
                   <thead>
                     <tr className="text-xs text-gray-400 border-b border-[#2a2b30]">
                       <th className="py-2">Name</th>
-                      <th className="py-2">Email</th>
+                      {/* <th className="py-2">Email</th> */}
                       <th className="py-2">Role</th>
                       <th className="py-2">Status</th>
                     </tr>
@@ -371,7 +373,7 @@ export default function EmployeeDashboard() {
                             <div className="font-medium">{u.userName ?? u.name ?? u.email}</div>
                           </div>
                         </td>
-                        <td className="py-2 pr-4 text-gray-300">{u.email}</td>
+                        {/* <td className="py-2 pr-4 text-gray-300">{u.email}</td> */}
                         <td className="py-2 pr-4">{u.role ?? u.source ?? 'Customer'}</td>
                         <td className="py-2 pr-4"><span className={`px-2 py-1 text-xs rounded-full font-semibold border ${u.isActive ? 'bg-green-500/10 text-green-400 border-green-700/30' : 'bg-red-500/10 text-red-400 border-red-700/30'}`}>{u.isActive ? 'Active' : 'Inactive'}</span></td>
                       </tr>
