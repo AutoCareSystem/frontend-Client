@@ -124,7 +124,7 @@ export default function CustomerProfile() {
     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
       <Sidebar role="Customer" />
       <main className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-4xl mx-auto">
+  <div className="max-w-xl mx-auto">
           <h1 className="text-4xl font-bold text-red-500 mb-8">My Profile</h1>
 
           {error && !isLoading && (

@@ -4,7 +4,7 @@ import type { ChatMessage, ChatResponse, TimeSlot } from "../types/ChatTypes"; /
 
 // ⚠️ IMPORTANT: Backend Chatbot Service URL
 // const CHATBOT_API_URL = 'http://localhost:5294'; 
-const CHATBOT_API_URL = 'http://localhost:5093'; 
+const CHATBOT_API_URL = 'http://localhost:5294'; 
 
 const API_ENDPOINT = `${CHATBOT_API_URL}/api/Chatbot/chat`; // Endpoint defined in ChatbotController.cs
 
