@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  Home, Clock, Folder, User, Settings, Calendar, MessageCircle, LogOut, Users
+  Home, Clock, Folder, User, Calendar, MessageCircle, LogOut, Users
 } from "lucide-react";
 import { Wrench } from "lucide-react";
 

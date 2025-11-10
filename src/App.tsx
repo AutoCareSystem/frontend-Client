@@ -16,15 +16,18 @@ import UserManagement from "./pages/employee/UserManagement";
 
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
+import Home from "./pages/Home";
+import { ToastProvider } from './components/ToastProvider';
 
 export default function App() {
   return (
     <Router>
-      <div className="relative">
-        <Routes>
-          {/* Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+      <ToastProvider>
+      <Routes>
+  {/* Auth */}
+  <Route path="/" element={<Home />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/signup" element={<Signup />} />
 
         {/* Customer Routes */}
         <Route path="/customer/dashboard" element={<CustomerDashboard />} />
@@ -42,8 +45,7 @@ export default function App() {
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />
       </Routes>
-      <ChatbotButton />
-      </div>
+      </ToastProvider>
     </Router>
   );
 }

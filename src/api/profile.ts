@@ -2,16 +2,32 @@ import axios from "axios";
 import type { ProfileData } from "../pages/customer/Profile";
 
 export type EmployeeProfileDto = {
-  employeeID?: number;
-  userID?: number;
+  employeeID?: number | string;
+  userID?: number | string;
+  userName?: string;
   name?: string;
   email?: string;
-  phone?: string;
+  phone?: string | null;
+  phoneNumber?: string | null;
   position?: string;
-  hourlyRate?: number;
-  totalAppointments?: number;
-  completedAppointments?: number;
-  recentAppointments?: Array<any>;
+  role?: string;
+  createdAt?: string;
+  empNo?: string;
+  isActive?: boolean;
+  raw?: any;
+};
+
+const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5093';
+
+const MOCK_PROFILE: EmployeeProfileDto = {
+  employeeID: 101,
+  userID: '67c051da0b79e1ee3cee9bd6',
+  name: 'Shireen Shamil',
+  email: 'shireenshamil@gmail.com',
+  phone: '+94 77 123 4567',
+  position: 'Senior Technician',
+  empNo: 'EMP001',
+  isActive: true,
 };
 
 export async function getEmployeeProfile(userId: string): Promise<EmployeeProfileDto> {

@@ -10,3 +10,35 @@ html, body, #root {
   box-sizing: border-box;
 }
 
+/* Hide scrollbars only for the employee dashboard page while preserving scroll behavior */
+.employee-dashboard, .employee-dashboard * {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  scrollbar-color: transparent transparent; /* Firefox */
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.employee-dashboard *::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+.employee-dashboard *::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+.employee-dashboard *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Hide scrollbars for the appointments page as well (scoped) */
+.appointments-page, .appointments-page * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scrollbar-color: transparent transparent;
+}
+.appointments-page *::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+.appointments-page *::-webkit-scrollbar-thumb { background: transparent; }
+.appointments-page *::-webkit-scrollbar-track { background: transparent; }
+
