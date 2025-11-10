@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -8,6 +9,7 @@ export default function Login() {
   const [role, setRole] = useState<"Customer" | "Employee">("Customer");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -34,6 +36,7 @@ export default function Login() {
       if (res.data.role === "Customer") navigate("/customer/dashboard");
       else navigate("/employee/dashboard");
     } catch (err: any) {
+      console.error('Login error:', err);
       setError("Invalid email or password");
     }
   };
@@ -41,7 +44,7 @@ export default function Login() {
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-[#1a1a1a]">
       <div className="bg-[#2a2a2a] p-10 rounded-xl shadow-md w-96">
-        <h1 className="text-2xl font-bold text-red-500 mb-6">Login</h1>
+        <h1 className="mb-6 text-2xl font-bold text-red-500">Login</h1>
 
         <input
           type="text"
@@ -68,11 +71,11 @@ export default function Login() {
           <option value="Employee">Employee</option>
         </select>
 
-        {error && <p className="text-red-500 mb-3">{error}</p>}
+        {error && <p className="mb-3 text-red-500">{error}</p>}
 
         <button
           onClick={handleLogin}
-          className="w-full bg-red-600 hover:bg-red-700 py-2 rounded-lg font-medium text-white"
+          className="w-full py-2 font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
         >
           Login
         </button>
