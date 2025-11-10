@@ -5,7 +5,7 @@ import axios from "axios";
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"customer" | "employee">("customer");
+  const [role, setRole] = useState<"Customer" | "Employee">("Customer");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -78,11 +78,11 @@ export default function Signup() {
         />
         <select
           value={role}
-          onChange={(e) => setRole(e.target.value as "customer" | "employee")}
+          onChange={(e) => setRole(e.target.value as "Customer" | "Employee")}
           className="w-full p-2 mb-4 rounded bg-[#1a1a1a] text-gray-200"
         >
-          <option value="customer">Customer</option>
-          <option value="employee">Employee</option>
+          <option value="Customer">Customer</option>
+          <option value="Employee">Employee</option>
         </select>
 
         {error && <p className="text-red-500 mb-3">{error}</p>}

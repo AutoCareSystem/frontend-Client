@@ -245,8 +245,11 @@ const ServicePage: React.FC = () => {
     <div className={`min-h-screen py-8 ${dark ? 'bg-[#1a1a1a]' : 'bg-gray-50'}`}>
       <div className="px-4 mx-auto max-w-7xl">
         <div className="flex gap-6">
-          <Sidebar role="customer" />
-          <div className="flex-1">
+          <div className="relative w-full">
+            <div className="fixed inset-y-0 left-0 w-64 z-20">
+              <Sidebar role="Customer" />
+            </div>
+            <div className="ml-64 flex-1">
             {/* Header */}
             <div className={`${dark ? PAGE_CONFIG.headerBg : 'bg-white'} p-6 mb-8 rounded-lg shadow-md`}>
               <div className="flex items-center mb-2 space-x-3">
@@ -412,9 +415,10 @@ const ServicePage: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+            </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

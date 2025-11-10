@@ -1,142 +1,219 @@
-import Sidebar from "../../components/Sidebar";
-import { useMemo, useState } from "react";
+// import Sidebar from "../../components/Sidebar";
+// import { useMemo, useState, useEffect } from "react";
+// import { fetchServices } from "../../api/services";
+// import type { ServiceDto } from "../../api/services";
+// import { fetchAppointmentServices } from "../../api/appointmentServices";
+// import type { AppointmentServiceDto } from "../../api/appointmentServices";
 
-type ServiceItem = {
-  id: number;
-  customerName: string;
-  start: string; // ISO
-  end: string; // ISO
-  serviceType: "Full" | "Half" | "Custom" | "Other";
-  details?: string;
-  status: "Pending" | "Approved" | "Completed" | "Rejected";
-};
+// // No local dummy data: use backend catalog and appointment-services
 
-const DUMMY_SERVICES: ServiceItem[] = [
-  {
-    id: 1,
-    customerName: "John Doe",
-    start: "2025-11-12T09:00:00Z",
-    end: "2025-11-12T11:00:00Z",
-    serviceType: "Full",
-    details: "Full service including oil, filter, inspection.",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    customerName: "Alice Smith",
-    start: "2025-11-12T12:00:00Z",
-    end: "2025-11-12T13:30:00Z",
-    serviceType: "Half",
-    details: "Half service - quick check and oil top-up.",
-    status: "Approved",
-  },
-  {
-    id: 3,
-    customerName: "Sam Turner",
-    start: "2025-11-13T08:30:00Z",
-    end: "2025-11-13T09:30:00Z",
-    serviceType: "Custom",
-    details: "Replace air filter, check AC system.",
-    status: "Pending",
-  },
-];
+// export default function Services() {
+//   const [catalog, setCatalog] = useState<ServiceDto[] | null>(null);
+//   const [loadingCatalog, setLoadingCatalog] = useState(false);
+//   const [catalogError, setCatalogError] = useState<string | null>(null);
+//   const [appointmentServices, setAppointmentServices] = useState<AppointmentServiceDto[] | null>(null);
+//   const [loadingAppointmentServices, setLoadingAppointmentServices] = useState(false);
+//   const [appointmentServicesError, setAppointmentServicesError] = useState<string | null>(null);
+//   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentServiceDto | null>(null);
+//   const [query, setQuery] = useState<string>("");
+//   const [apptStatusFilter, setApptStatusFilter] = useState<string>("All");
+//   const [apptOptionFilter, setApptOptionFilter] = useState<string>("All");
 
-export default function Services() {
-  const [services, setServices] = useState<ServiceItem[]>(DUMMY_SERVICES);
-  const [selected, setSelected] = useState<ServiceItem | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>("All");
-  const [filterType, setFilterType] = useState<string>("All");
+//   // local service list removed; backend appointmentServices drive the UI
 
-  const list = useMemo(() => {
-    return services.filter(s => (filterStatus === "All" || s.status === filterStatus) && (filterType === "All" || s.serviceType === filterType));
-  }, [services, filterStatus, filterType]);
+//   // loader for appointment services so we can reuse (retry)
+//   const loadAppointmentServices = async () => {
+//     setAppointmentServicesError(null);
+//     setLoadingAppointmentServices(true);
+//     try {
+//       const data = await fetchAppointmentServices();
+//       setAppointmentServices(data ?? []);
+//     } catch (err: any) {
+//       setAppointmentServicesError(err?.message || 'Failed to load appointment services');
+//       setAppointmentServices(null);
+//     } finally {
+//       setLoadingAppointmentServices(false);
+//     }
+//   };
 
-  const updateStatus = (id: number, status: ServiceItem['status']) => {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, status } : s));
-    setSelected(prev => prev && prev.id === id ? { ...prev, status } : prev);
-  };
+//   useEffect(() => {
+//     let mounted = true;
+//     const load = async () => {
+//       setLoadingCatalog(true);
+//       try {
+//         const data = await fetchServices();
+//         if (!mounted) return;
+//         setCatalog(data);
+//       } catch (err: any) {
+//         if (!mounted) return;
+//         setCatalogError(err?.message || 'Failed to load services');
+//       } finally {
+//         if (!mounted) return;
+//         setLoadingCatalog(false);
+//       }
+//     };
 
-  return (
-    <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
-      <Sidebar role="employee" />
-      <main className="flex-1 p-8 overflow-y-auto">
-        <h1 className="text-3xl font-bold text-red-500 mb-6">Services</h1>
+//     load();
+//     void loadAppointmentServices();
+//     return () => { mounted = false; };
+//   }, []);
 
-        <div className="flex gap-4 mb-4 items-center">
-          <label className="text-sm text-gray-300">Status:</label>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="bg-[#2a2a2a] p-2 rounded">
-            <option>All</option>
-            <option>Pending</option>
-            <option>Approved</option>
-            <option>Completed</option>
-            <option>Rejected</option>
-          </select>
-          <label className="text-sm text-gray-300">Type:</label>
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="bg-[#2a2a2a] p-2 rounded">
-            <option>All</option>
-            <option>Full</option>
-            <option>Half</option>
-            <option>Custom</option>
-            <option>Other</option>
-          </select>
-        </div>
+//   const formatPrice = (v?: number) => {
+//     if (v == null) return '—';
+//     return `${new Intl.NumberFormat().format(v)} LKR`;
+//   };
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {list.map(s => (
-            <div key={s.id} className="bg-[#2a2a2a] p-6 rounded-xl border border-gray-700 hover:border-red-500 transition">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold">{s.customerName}</h3>
-                  <div className="text-sm text-gray-300">{new Date(s.start).toLocaleString()} - {new Date(s.end).toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className={`px-2 py-1 rounded text-xs ${s.status === 'Pending' ? 'bg-yellow-600 text-black' : s.status === 'Approved' ? 'bg-green-600' : s.status === 'Completed' ? 'bg-blue-600' : 'bg-red-600'}`}>
-                    {s.status}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-3 text-sm text-gray-300">Type: {s.serviceType}</div>
-              <div className="mt-4 flex gap-2">
-                <button onClick={() => setSelected(s)} className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded">View</button>
-                {s.status === 'Pending' && (
-                  <>
-                    <button onClick={() => updateStatus(s.id, 'Approved')} className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded">Approve</button>
-                    <button onClick={() => updateStatus(s.id, 'Rejected')} className="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded">Reject</button>
-                  </>
-                )}
-                {s.status === 'Approved' && (
-                  <button onClick={() => updateStatus(s.id, 'Completed')} className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded">Mark Completed</button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+//   const filteredAppointments = useMemo(() => {
+//     if (!appointmentServices) return [] as AppointmentServiceDto[];
+//     return appointmentServices.filter(a => {
+//       if (apptStatusFilter !== 'All' && a.status !== apptStatusFilter) return false;
+//       if (apptOptionFilter !== 'All' && a.serviceOption !== apptOptionFilter) return false;
+//       if (query) {
+//         const hay = `${a.customerName ?? ''} ${a.customerEmail ?? ''} ${a.vehicleInfo ?? ''}`.toLowerCase();
+//         if (!hay.includes(query.toLowerCase())) return false;
+//       }
+//       return true;
+//     });
+//   }, [appointmentServices, apptStatusFilter, apptOptionFilter, query]);
 
-        {selected && (
-          <div className="mt-6 bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-semibold">Service for {selected.customerName}</h2>
-                <div className="text-sm text-gray-300">{new Date(selected.start).toLocaleString()} - {new Date(selected.end).toLocaleString()}</div>
-                <div className="mt-3 text-gray-200">Type: {selected.serviceType}</div>
-                <div className="mt-2 text-gray-200">{selected.details}</div>
-              </div>
-              <div className="flex flex-col gap-2">
-                {selected.status === 'Pending' && (
-                  <>
-                    <button onClick={() => updateStatus(selected.id, 'Approved')} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg">Approve</button>
-                    <button onClick={() => updateStatus(selected.id, 'Rejected')} className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg">Reject</button>
-                  </>
-                )}
-                {selected.status === 'Approved' && (
-                  <button onClick={() => updateStatus(selected.id, 'Completed')} className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg">Mark Completed</button>
-                )}
-                <button onClick={() => setSelected(null)} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">Close</button>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-}
+//   return (
+//     <div className="flex h-screen bg-[#1a1a1a] text-gray-100">
+//       <Sidebar role="Employee" />
+//       <main className="flex-1 p-8 overflow-y-auto">
+//         <h1 className="text-3xl font-bold text-red-500 mb-6">Services</h1>
+
+//         {/* Local dummy services removed - page uses backend catalog and appointment services */}
+
+//         <div className="mt-8">
+//           <h2 className="text-2xl font-semibold mb-4">Available Services (catalog)</h2>
+//           {loadingCatalog && <div className="text-sm text-gray-300 mb-2">Loading services catalog...</div>}
+//           {catalogError && <div className="text-sm text-red-500 mb-2">{catalogError}</div>}
+//           {catalog && (
+//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//               {catalog.map(c => (
+//                 <div key={c.serviceID ?? c.code} className="bg-[#2a2a2a] p-4 rounded border border-gray-700">
+//                   <div className="flex justify-between items-start">
+//                     <div>
+//                       <div className="font-semibold">{c.title}</div>
+//                       <div className="text-sm text-gray-400">{c.description}</div>
+//                     </div>
+//                     <div className="text-right">
+//                       <div className="text-sm text-gray-300">{c.duration ?? '—'} min</div>
+//                       <div className="text-red-500 font-bold">{typeof c.price === 'number' ? `$${c.price.toFixed(2)}` : '—'}</div>
+//                     </div>
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           )}
+//         </div>
+
+//         <div className="mt-8">
+//           <div className="flex items-center justify-between">
+//               <h2 className="text-2xl font-semibold mb-4">Service Appointments</h2>
+//               <div className="flex items-center gap-2">
+//               <input
+//                 value={query}
+//                 onChange={(e) => setQuery(e.target.value)}
+//                 placeholder="Search customer, email or vehicle"
+//                 className="bg-[#2a2a2a] p-2 rounded text-sm w-64"
+//               />
+//               <select value={apptStatusFilter} onChange={(e) => setApptStatusFilter(e.target.value)} className="bg-[#2a2a2a] p-2 rounded text-sm">
+//                 <option>All</option>
+//                 <option>Pending</option>
+//                 <option>Approved</option>
+//                 <option>Completed</option>
+//                 <option>Rejected</option>
+//               </select>
+//               <select value={apptOptionFilter} onChange={(e) => setApptOptionFilter(e.target.value)} className="bg-[#2a2a2a] p-2 rounded text-sm">
+//                 <option>All</option>
+//                 <option>Full</option>
+//                 <option>Custom</option>
+//               </select>
+//                 <button onClick={() => void loadAppointmentServices()} className="bg-gray-600 hover:bg-gray-700 text-sm px-3 py-1 rounded">Retry</button>
+//                 <a href="/employee/services/add" className="bg-green-600 hover:bg-green-700 text-sm px-3 py-1 rounded">Add Service</a>
+//             </div>
+//           </div>
+
+//           {loadingAppointmentServices && <div className="text-sm text-gray-300 mb-2">Loading service appointments...</div>}
+//           {appointmentServicesError && <div className="text-sm text-red-500 mb-2">{appointmentServicesError}</div>}
+
+//           {!loadingAppointmentServices && appointmentServices && filteredAppointments.length === 0 && (
+//             <div className="text-sm text-gray-400">No service appointments match your filters.</div>
+//           )}
+
+//           {filteredAppointments.length > 0 && (
+//             <div className="space-y-3">
+//               {filteredAppointments.map(a => (
+//                 <div key={a.appointmentID} className="bg-[#2a2a2a] p-4 rounded border border-gray-700">
+//                   <div className="flex justify-between">
+//                     <div>
+//                       <div className="font-semibold">{a.customerName}</div>
+//                       <div className="text-sm text-gray-400">{a.customerEmail} • {a.vehicleInfo}</div>
+//                       <div className="text-sm text-gray-400">{a.startDate ? new Date(a.startDate).toLocaleString() : a.time}</div>
+//                     </div>
+//                     <div className="text-right">
+//                       <div className="text-sm">Status: <span className="font-medium">{a.status}</span></div>
+//                       <div className="text-red-500 font-bold">{formatPrice(a.totalPrice)}</div>
+//                     </div>
+//                   </div>
+//                   <div className="mt-2">
+//                     {a.packageName && <div className="text-sm">Package: {a.packageName} ({a.packageType})</div>}
+//                     {a.packageServices && a.packageServices.length > 0 && (
+//                       <ul className="text-sm mt-1 list-disc list-inside text-gray-300">
+//                         {a.packageServices.map((ps, i) => (<li key={i}>{ps.title} — {formatPrice(ps.price)}</li>))}
+//                       </ul>
+//                     )}
+//                     {a.customServices && a.customServices.length > 0 && (
+//                       <div className="mt-1 text-sm text-gray-300">Custom services:
+//                         <ul className="list-disc list-inside">
+//                           {a.customServices.map((cs, i) => (<li key={i}>{cs.title} — {formatPrice(cs.price)}</li>))}
+//                         </ul>
+//                       </div>
+//                     )}
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           )}
+//         </div>
+
+//         {selectedAppointment && (
+//           <div className="mt-6 bg-[#2a2a2a] p-6 rounded-lg border border-gray-700">
+//             <div className="flex justify-between items-start">
+//               <div>
+//                 <h2 className="text-2xl font-semibold">Appointment — {selectedAppointment.customerName}</h2>
+//                 <div className="text-sm text-gray-300">{selectedAppointment.startDate ? new Date(selectedAppointment.startDate).toLocaleString() : selectedAppointment.time}</div>
+//                 <div className="mt-3 text-gray-200">Vehicle: {selectedAppointment.vehicleInfo}</div>
+//                 <div className="mt-2 text-gray-200">Assigned To: {selectedAppointment.employeeName ?? 'Not Assigned'}</div>
+//               </div>
+//               <div className="flex flex-col gap-2">
+//                 <div className="text-right">
+//                   <div className="text-sm">Status: <span className="font-medium">{selectedAppointment.status}</span></div>
+//                   <div className="text-red-500 font-bold mt-1">{formatPrice(selectedAppointment.totalPrice)}</div>
+//                 </div>
+//                 <button onClick={() => setSelectedAppointment(null)} className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">Close</button>
+//               </div>
+//             </div>
+
+//             <div className="mt-4">
+//               {selectedAppointment.packageName && <div className="text-sm">Package: {selectedAppointment.packageName} ({selectedAppointment.packageType})</div>}
+//               {selectedAppointment.packageServices && selectedAppointment.packageServices.length > 0 && (
+//                 <ul className="text-sm mt-1 list-disc list-inside text-gray-300">
+//                   {selectedAppointment.packageServices.map((ps, i) => (<li key={i}>{ps.title} — {formatPrice(ps.price)}</li>))}
+//                 </ul>
+//               )}
+//               {selectedAppointment.customServices && selectedAppointment.customServices.length > 0 && (
+//                 <div className="mt-1 text-sm text-gray-300">Custom services:
+//                   <ul className="list-disc list-inside">
+//                     {selectedAppointment.customServices.map((cs, i) => (<li key={i}>{cs.title} — {formatPrice(cs.price)}</li>))}
+//                   </ul>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+//         )}
+//       </main>
+//     </div>
+//   );
+// }
