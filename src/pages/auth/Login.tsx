@@ -18,6 +18,26 @@ export default function Login() {
         password,
       });
 
+      alert('Login response:'+ res.data.refreshToken); // ✅ Debug
+
+      const userData = {  
+        userId: res.data.userId,
+        customerID: res.data.customerID,  // ✅ Now returned from backend
+        employeeID: res.data.employeeID,  // ✅ Now returned from backend
+        vehicleID: res.data.vehicleID,    // ✅ Now returned from backend
+        role: res.data.role,
+        email: res.data.email,
+      };
+
+      alert('🔍 Full Login Response:'+ res.data);
+      
+
+      const tokens = {
+        accessToken: res.data.accessToken,
+        refreshToken: res.data.refreshToken,
+      };
+
+      login(userData, tokens);
       console.log('Login response:', res.data);
       
       // Save tokens and user info
