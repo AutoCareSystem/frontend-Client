@@ -1,18 +1,26 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route, Navigate
+} from "react-router-dom";
 
 // Customer Pages
+import ChatbotButton from "./components/ChatbotButton";
 import CustomerDashboard from "./pages/customer/Dashboard";
+import CleanDashboard from "./pages/customer/CleanDashboard";
 import ServicePage from "./pages/customer/ServicePage";
 import ProjectPage from "./pages/customer/Projectpage";
-import Chatbot from "./pages/customer/Chatbot";
+import CustomerProfile from "./pages/customer/Profile";
 
 // Employee Pages
-import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+// import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import TimeLogs from "./pages/employee/TimeLogs";
-import Projects from "./pages/employee/Projects";
+// import Projects from "./pages/employee/Projects";
 import Appointments from "./pages/employee/Appointments";
 import Profile from "./pages/employee/Profile";
-import Services from "./pages/employee/Services";
+// import Services from "./pages/employee/Services";
+// import AddService from "./pages/employee/AddService";
+import UserManagement from "./pages/employee/UserManagement";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -26,33 +34,42 @@ function NotFound() {
 export default function App() {
   return (
     <Router>
-      <Routes>
-        {/* Root Redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+      <div className="relative">
+        <Routes>
+  {/* Default redirect to customer dashboard (force customer navbar) */}
+  <Route path="/" element={<Navigate to="/customer/dashboard" replace />} />
 
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+  {/* Redirect any employee paths to customer dashboard so customer navbar is used */}
+  <Route path="/employee/*" element={<Navigate to="/customer/dashboard" replace />} />
+
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
         {/* Customer Routes */}
-        <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+        <Route path="/customer/dashboard" element={<CleanDashboard />} />
+        <Route path="/customer/dashboard-old" element={<CustomerDashboard />} />
         <Route path="/customer/appointments" element={<ServicePage />} />
         <Route path="/Servicepage" element={<ServicePage />} /> {/* optional duplicate */}
         <Route path="/customer/modifications" element={<ProjectPage />} />
         <Route path="/Projectpage" element={<ProjectPage />} /> {/* optional duplicate */}
-        <Route path="/customer/chatbot" element={<Chatbot />} />
+        <Route path="/customer/profile" element={<CustomerProfile />} />
 
         {/* Employee Routes */}
-        <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+        {/* <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
         <Route path="/employee/timelogs" element={<TimeLogs />} />
         <Route path="/employee/projects" element={<Projects />} />
         <Route path="/employee/services" element={<Services />} />
+    <Route path="/employee/services/add" element={<AddService />} /> */}
+  <Route path="/employee/users" element={<UserManagement />} />
         <Route path="/employee/appointments" element={<Appointments />} />
         <Route path="/employee/profile" element={<Profile />} />
 
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <ChatbotButton />
+      </div>
     </Router>
   );
 }
